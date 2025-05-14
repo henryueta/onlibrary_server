@@ -8,13 +8,13 @@ notification_router.get("/notification/get",async (req,res)=>{
     try{
         const {id_usuario,id_biblioteca,type} = req.query;
         switch (type) {
-            case "comum":
+            case "admin":
                     (async()=>{
                         const notification_data = await client.from("tb_notificacao")
                         .select("*")
                         .eq("fk_id_usuario",id_usuario)
                         .eq("fk_id_biblioteca",id_biblioteca)
-                        .eq("tipo","comum");
+                        .eq("tipo","admin");
 
 
                         !!notification_data
@@ -22,9 +22,9 @@ notification_router.get("/notification/get",async (req,res)=>{
                         : res.status(500).send({message:"error"})
                     })()
                 break;
-            case "admin":
+            case "comum":
                     (async()=>{
-                      const notification_data = await client.from("tb_notificacao").select("*").eq("fk_id_usuario",id_usuario).eq("tipo","admin");
+                      const notification_data = await client.from("tb_notificacao").select("*").eq("fk_id_usuario",id_usuario).eq("tipo","comum");
 
 
                       !!notification_data

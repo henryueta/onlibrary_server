@@ -91,10 +91,11 @@ loan_router.post("/loan/post",async(req,res)=>{
 
         })()
         console.log(loanExemplary_id)
+        !!loanExemplary_id
+        ? res.status(200).send({message:""})
+        :res.status(500).send({message:"error"})
       })()
-      !!loanExemplary_id
-      ? res.status(200).send({message:""})
-      :res.status(500).send({message:"error"})
+
 
 
     })()

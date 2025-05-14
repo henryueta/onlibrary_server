@@ -20,7 +20,6 @@ const onQueryDatabase = (query)=>{
       console.log(query)
          tableQuery = await client.from(query.table).select(query.getParams);
 
-
        return !!tableQuery
        && tableQuery.error
        ? null

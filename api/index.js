@@ -340,8 +340,40 @@ const admin_library = [
 
 server.get("/tables/data",async (req,res)=>{
     let tableData = [];
+
+    const onGetView =async (view,id,id_biblioteca)=>{
+ 
+                try{
+                    id != undefined
+                ? tableData = [
+
+                ]
+                :  tableData = await onQueryDatabase({
+                  type:"getEq",
+                  table:view,
+                  getParams:"*",
+                  eq:{
+                    field:"fk_id_biblioteca",
+                    val:id_biblioteca
+                  }  
+                })
+                !!tableData
+                && console.log(tableData)
+
+                !!tableData
+                ? res.status(200).send(tableData)
+                : (()=>{
+                    console.log("AA")
+                    res.status(500).send([])
+                })()   
+                }
+                catch(error){
+                    console.log(error)
+                }
+    }
+
     try{
-        const {type,id,libraryId} = req.query
+        const {type,id,id_biblioteca} = req.query
 
         switch(type){
 
@@ -354,34 +386,34 @@ server.get("/tables/data",async (req,res)=>{
                 res.status(200).send([])
             break;
             case "exemplary":
-            (async()=>{
-              id !== undefined
-              ? tableData = []
-              :
-                tableData = await onQueryDatabase({
-                  type:"get",
-                  table:"vw_exemplar_biblioteca",
-                  queryParams:"*"
-                })
-                !!tableData
-                && console.log(tableData)
-
-                !!tableData
-                ? res.status(200).send(tableData)
-                : res.status(500).send([])
-              })()
-
+                (async()=>{
+                    await onGetView("vw_exemplar_biblioteca",id,id_biblioteca)
+                })()
             break;
-            case "user":
-                tableData = [
-                    {
-                        name:"henry",
-                        id:"oqado"
-                    }
-                ]
+            case "library_user":
+                (async()=>{
+                    await onGetView("vw_table_usuario_biblioteca",id,id_biblioteca)
+                })()
+               break;
+               case "account":
+                (async()=>{
+                    await onGetView("vw_table_perfil_usuario",id,id_biblioteca)
+                })()
+               break;
+               case "loan":
+                (async()=>{
+                    await onGetView("vw_table_emprestimo",id,id_biblioteca)
+                })()
+               break;
+               case "amerce":
+                 (async()=>{
+                    await onGetView("vw_table_multa",id,id_biblioteca)
+                })()
+               break;
         }
     }
     catch(error){
+        console.log(error)
         res.status(200).send({message:error})
     }
 })

@@ -85,40 +85,47 @@ table_router.get("/data/group",async(req,res)=>{
             case "loan":
             const users_id = (async()=>{
 
-             const current_userId = await onQueryDatabase({
-               type:"getEq",
-               table:"tb_usuario_biblioteca",
-               getParams:"fk_id_usuario,id",
-               eq:{
-                 field:"fk_id_biblioteca",
-                 val:id
-               }
-             })
-             console.log(current_userId)
+             // const current_userId = await onQueryDatabase({
+             //   type:"getEq",
+             //   table:"tb_usuario_biblioteca",
+             //   getParams:"fk_id_usuario,id",
+             //   eq:{
+             //     field:"fk_id_biblioteca",
+             //     val:id
+             //   }
+             // })
 
-             const current_userLibraryId =  !!current_userId
+             const current_userId = await client
+             .from('tb_usuario_biblioteca')
+             .select('fk_id_usuario,id')
+             .eq("fk_id_biblioteca",id)
+             .eq("tipo_usuario","comum");
+
+             console.log(current_userId.data)
+
+             const current_userLibraryId =  !!current_userId.data
              ? await onQueryDatabase({
                type:"getIn",
                table:"tb_usuario_biblioteca",
                getParams:"value:id",
                eq:{
                  field:"fk_id_usuario",
-                 array:current_userId.map((item)=>item.fk_id_usuario)
+                 array:current_userId.data.map((item)=>item.fk_id_usuario)
                }
              })
              : [];
 
-             // const current_user = !!current_userLibraryId
-             // ? await onQueryDatabase({
-             //   type:"getIn",
-             //   table:"tb_usuario",
-             //   getParams:"label:username",
-             //   eq:{
-             //     field:"id",
-             //     array:current_userId.map((item)=>item.fk_id_usuario)
-             //   }
-             // })
-             // : []
+            //  const current_user = !!current_userLibraryId
+            //  ? await onQueryDatabase({
+            //    type:"getIn",
+            //    table:"tb_usuario",
+            //    getParams:"label:username",
+            //    eq:{
+            //      field:"id",
+            //      array:current_userId.map((item)=>item.fk_id_usuario)
+            //    }
+            //  })
+            //  : []
 
              const formated_users = await onQueryDatabase({
                type:"getIn",
@@ -126,7 +133,7 @@ table_router.get("/data/group",async(req,res)=>{
                getParams:"value:usuario_biblioteca_id,label:username",
                eq:{
                  field:"usuario_biblioteca_id",
-                 array:current_userId.map((item)=>item.id)
+                 array:current_userId.data.map((item)=>item.id)
                }
              })
 
@@ -195,7 +202,7 @@ table_router.get("/count",async (req,res)=>{
           count = 0;
             warn = false
               break;
-          case "user":
+          case "library_user":
           const userCount = await client
             .from('tb_usuario_biblioteca')
             .select('*', { count: 'exact'})
@@ -204,6 +211,7 @@ table_router.get("/count",async (req,res)=>{
           !!userCount
           &&
           (()=>{
+            console.log(userCount.count+"AAA")
                   count=userCount.count,
                   warn=false
             })()
@@ -219,10 +227,23 @@ table_router.get("/count",async (req,res)=>{
           (()=>{
 
                   count=loanCount.count,
-                  warn=!!loanCount.data.filter((item)=>item.situacao === "vencido") ? true : false
-              
+                  warn=!!loanCount.data.filter((item)=>item.situacao === "vencido").length ? true : false
+                
             })()
+            break;
+            case "amerce":
+             const amerceCount = await client
+            .from('tb_multa')
+            .select('situacao', { count: 'exact'})
+            .eq("fk_id_biblioteca",id)
+            !!amerceCount
+            &&
+            (()=>{
 
+                    count=amerceCount.count,
+                    warn=!!amerceCount.data.filter((item)=>item.situacao === "vencido").length ? true : false
+
+            })() 
             break;
           default:
               break;

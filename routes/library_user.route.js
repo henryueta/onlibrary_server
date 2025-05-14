@@ -3,19 +3,61 @@ import {onQueryDatabase} from "../functions/query.js"
 
 const library_user_router = express.Router();
 
+library_user_router.get("/library_user/check",async (req,res)=>{
+
+  try{
+    (async()=>{
+      const {id_usuario,id_biblioteca} = req.query
+      const library_user_data = await client.from("tb_usuario_biblioteca")
+                        .select("situacao")
+                        .eq("fk_id_usuario",id_usuario)
+                        .eq("fk_id_biblioteca",id_biblioteca);
+                        
+                        const user_armece = await client.from("tb_multa")
+                        .select("*")
+                        .eq("fk_id_usuario",id_usuario)
+                        .neq("situacao","concluido")
+                        .neq("situacao","cancelado")
+        
+                        !!user_armece
+                        ? res.status(200).send(library_user_data.data)
+                        : res.status(500).send({message:"error"})
+    })()
+  }
+  catch(error){
+    res.status(500).send({message:"error"})
+  }
+
+})
+
 library_user_router.post("/library_user/post", async (req,res)=>{
 
   try{
     //----LOGICA PARA CADASTRAR USUÁRIOS PARTICULARES DA BIBLIOTECA--
 
-    const user_library_id = onQueryDatabase({
+    const user_library_checkout = await onQueryDatabase({
+      type:"getEq",
+      table:"tb_usuario",
+      getParams:"cpf",
+      eq:{
+        field:"cpf",
+        val:req.body.cpf
+      }
+    })
+    
+    !!user_library_checkout.length
+   ? (async()=>{
+     const user_library_id = await onQueryDatabase({
       type:"post",
       table:"tb_usuario_biblioteca",
-      data:req.body
+      data:req.body   
     })
     !!user_library_id
       ?res.status(201).send({message:"success"})
       : res.status(500).send({message:"error"})
+   })()
+   : res.status(500).send({message:"Campo cpf inválido para usuário"})
+    
   }
   catch(error){
     res.status(500).send({message:"error"})
