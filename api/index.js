@@ -378,16 +378,11 @@ server.get("/tables/data",async (req,res)=>{
         switch(type){
 
             case "book":
-               id !== undefined
-                ? (()=>{
-                    tableData = bookData.find((item,index)=>item.id == id && item.livraryId == libraryId)
-                })()
-                : tableData = bookData.filter((item)=>item.livraryId === libraryId)
-                res.status(200).send([])
+              onGetView("vw_table_livro",id,id_biblioteca)
             break;
             case "exemplary":
                 (async()=>{
-                    await onGetView("vw_exemplar_biblioteca",id,id_biblioteca)
+                    await onGetView("vw_table_exemplar",id,id_biblioteca)
                 })()
             break;
             case "library_user":
@@ -402,6 +397,7 @@ server.get("/tables/data",async (req,res)=>{
                break;
                case "loan":
                 (async()=>{
+                    /////////////////////////////apenas os disponíveis 
                     await onGetView("vw_table_emprestimo",id,id_biblioteca)
                 })()
                break;
@@ -506,7 +502,7 @@ server.get("/auth/library", async (req,res)=>{
 })
 
 
-server.listen(5700,(error)=>{
+server.listen(5900,(error)=>{
     if(error){
         console.log(error);
     }

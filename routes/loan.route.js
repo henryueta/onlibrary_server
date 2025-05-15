@@ -77,6 +77,18 @@ loan_router.post("/loan/post",async(req,res)=>{
         !!loan_id
         && (async()=>{
 
+          newExemplarySituation = await onQueryDatabase({
+            type:"put",
+            table:"tb_exemplar",
+            data:{
+              disponivel:false
+            },
+            eq:{
+              field:"id",
+              eq:""
+            }
+          })
+
           loanExemplary_id = await onQueryDatabase({
             type:"post",
             table:"tb_emprestimo_exemplar",
