@@ -77,15 +77,15 @@ loan_router.post("/loan/post",async(req,res)=>{
         !!loan_id
         && (async()=>{
 
-          newExemplarySituation = await onQueryDatabase({
-            type:"put",
+            await onQueryDatabase({
+            type:"putIn",
             table:"tb_exemplar",
             data:{
               disponivel:false
             },
             eq:{
               field:"id",
-              eq:""
+              array:req.body.exemplares
             }
           })
 
@@ -101,11 +101,12 @@ loan_router.post("/loan/post",async(req,res)=>{
             })
           })
 
-        })()
-        console.log(loanExemplary_id)
         !!loanExemplary_id
-        ? res.status(200).send({message:""})
+        ? res.status(200).send({message:"success"})
         :res.status(500).send({message:"error"})
+
+        })()
+        
       })()
 
 
@@ -113,6 +114,7 @@ loan_router.post("/loan/post",async(req,res)=>{
     })()
   }
   catch(error){
+    console.log("___________________________________________")
     console.log(error)
       res.status(500).send({message:"error"})
   }

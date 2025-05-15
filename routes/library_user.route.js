@@ -1,5 +1,6 @@
 import express from "express";
 import {onQueryDatabase} from "../functions/query.js"
+import client from "../database/supabase.js";
 
 const library_user_router = express.Router();
 
@@ -19,7 +20,7 @@ library_user_router.get("/library_user/check",async (req,res)=>{
                         .neq("situacao","concluido")
                         .neq("situacao","cancelado")
         
-                        !!user_armece
+                        !!user_armece.data
                         ? res.status(200).send(library_user_data.data)
                         : res.status(500).send({message:"error"})
     })()
@@ -45,19 +46,37 @@ library_user_router.post("/library_user/post", async (req,res)=>{
       }
     })
     
-    !!user_library_checkout.length
+    const noLibraryanAccount = await client.from("tb_perfil_usuario")
+    .select("*")
+    .eq("id",req.body.fk_id_perfil_usuario)
+    .neq("nome","Bibliotecario");
+
+    const noAdminUser = req.body.tipo_usuario;
+    let isValidated = false;
+
+    !!noLibraryanAccount.data.length && noAdminUser.toLowerCase() !== "admin" 
+    ? isValidated = true
+    : !noLibraryanAccount.data.length && noAdminUser.toLowerCase() === "admin"
+    ? isValidated = true
+    : isValidated = false;
+    
+
+    isValidated 
+   ? !!user_library_checkout.length 
    ? (async()=>{
+
      const user_library_id = await onQueryDatabase({
       type:"post",
       table:"tb_usuario_biblioteca",
       data:req.body   
     })
+    
     !!user_library_id
       ?res.status(201).send({message:"success"})
       : res.status(500).send({message:"error"})
    })()
    : res.status(500).send({message:"Campo cpf inválido para usuário"})
-    
+   : res.status(500).send({message:"Bibliotecários devem ser administradores do sistema!"})
   }
   catch(error){
     res.status(500).send({message:"error"})

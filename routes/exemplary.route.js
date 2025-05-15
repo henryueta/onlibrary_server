@@ -20,9 +20,20 @@ exemplary_router.post("/exemplary/post",async(req,res)=>{
       })
       //----CADASTREI EXEMPLAR(tb_exemplar)--
 
+      
+
       !!exemplary_id.length
       ? (async()=>{
-        const bookLibrary_id =
+
+        const library_exemplary = await client.from("tb_biblioteca_livro")
+        .select("fk_id_livro")
+        .eq("fk_id_biblioteca",req.body.fk_id_biblioteca)
+        .neq("fk_id_livro",req.body.fk_id_livro)
+              
+        !!library_exemplary.data.length 
+        ?(async()=>{
+
+          const bookLibrary_id =
         await onQueryDatabase({
             type:"post",
             table:"tb_biblioteca_livro",
@@ -31,13 +42,17 @@ exemplary_router.post("/exemplary/post",async(req,res)=>{
               fk_id_biblioteca:req.body.fk_id_biblioteca
             }
           }) 
+
         //----CADASTREI LIVRO DO EXEMPLAR NA BIBLIOTECA(tb_biblioteca_livro)--
         !!bookLibrary_id.length
-        ? res.status(200).send({message:""})
+        ? res.status(200).send({message:"success"})
         :(()=>{
           console.log(bookLibrary_id.error)
           res.status(500).send({message:bookLibrary_id.error})
         })
+
+        })()
+        : res.status(200).send({message:"success"})
       })()
       :res.status(500).send({message:"error"})
     })()

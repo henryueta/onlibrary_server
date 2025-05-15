@@ -22,7 +22,7 @@ book_router.post("/book/post",async (req,res)=>{
 
       !!check_book.length
       ? res.status(500).send({message:"Livro já cadastrado!"})
-      : res.status(200).send({message:""})
+      : res.status(200).send({message:"success"})
       //----LOGICA PARA CADASTRAR LIVROS----
 
   // const  bookId = await onQueryDatabase({

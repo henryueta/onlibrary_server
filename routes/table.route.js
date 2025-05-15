@@ -12,14 +12,25 @@ table_router.get("/data/group",async(req,res)=>{
 
         switch (type) {
             case "library_user":
+            (async()=>{
+              const users_id = await (async()=>{
 
-            array = {
+               const current_libraryUsersId = await client.from("tb_usuario_biblioteca")
+              .select("fk_id_usuario")
+              .eq("fk_id_biblioteca",id);
+
+               return !!current_libraryUsersId.data
+                ? client.from("tb_usuario")
+                .select("label:username,value:id")
+                .not('id','in',`(${current_libraryUsersId.data.map((item)=>item.fk_id_usuario)})`)
+                : []
+              })()
+
+
+
+              array = {
               ////cpf
-              usuarios: await onQueryDatabase({
-                type:"get",
-                table:"tb_usuario",
-                getParams:"label:username,value:id"
-              }),
+              usuarios: await users_id.data,
               perfis_biblioteca: await onQueryDatabase({
                 type:"getEq",
                 table:"tb_perfil_usuario",
@@ -31,7 +42,8 @@ table_router.get("/data/group",async(req,res)=>{
               })
             }
             res.status(200).send(array)
-
+            })()
+            
             break;
             case "book":
             array = {
@@ -95,15 +107,19 @@ table_router.get("/data/group",async(req,res)=>{
              //   }
              // })
 
+              
+
              const current_userId = await client
              .from('tb_usuario_biblioteca')
              .select('fk_id_usuario,id')
              .eq("fk_id_biblioteca",id)
-             .eq("tipo_usuario","comum");
+             .eq("tipo_usuario","comum")
+             .neq("situacao","bloqueado");
 
              console.log(current_userId.data)
 
-             const current_userLibraryId =  !!current_userId.data
+             const current_userLibraryId =  
+             !!current_userId.data.length
              ? await onQueryDatabase({
                type:"getIn",
                table:"tb_usuario_biblioteca",
@@ -143,16 +159,28 @@ table_router.get("/data/group",async(req,res)=>{
 
            })()
 
+           const exemplars_id = (async()=>{
+            const current_exemplaryId = await client.from("tb_exemplar")
+              .select("label:numero_tombo,value:id")
+              .eq("fk_id_biblioteca",id)
+              .eq("disponivel",true)
+
+            return !!current_exemplaryId.data
+            ? current_exemplaryId.data
+            : [];
+           })()
+
             array  = {
-                exemplares_biblioteca: await onQueryDatabase({
-                  type:"getEq",
-                  table:"tb_exemplar",
-                  getParams:"label:numero_tombo,value:id",
-                  eq:{
-                    field:"fk_id_biblioteca",
-                    val:id
-                  }
-                }),
+              exemplares_biblioteca: await exemplars_id,
+                // exemplares_biblioteca: await onQueryDatabase({
+                //   type:"getEq",
+                //   table:"tb_exemplar",
+                //   getParams:"label:numero_tombo,value:id",
+                //   eq:{
+                //     field:"fk_id_biblioteca",
+                //     val:id
+                //   }
+                // }),
                 usuarios_biblioteca:await users_id
 
 
