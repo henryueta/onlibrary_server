@@ -472,8 +472,8 @@ let current_libraries = [
 server.get("/auth/library", async (req,res)=>{
 
     try{
+        console.log(req)
         console.log(req.cookies)
-        console.log(token.user_id)
         const token = JSON.parse(req.cookies.user_id || "")
         
 
