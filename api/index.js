@@ -469,12 +469,11 @@ let current_libraries = [
 
 ]
 
-server.get("/auth/library", async (req,res)=>{
+server.post("/auth/library", async (req,res)=>{
 
     try{
-        console.log(req)
-        console.log(req.cookies)
-        const token = JSON.parse(req.cookies.user_id || "")
+        console.log(req.body)
+        const {token} = req.body;  
         
 
         const user_libraries = await client.from("tb_usuario_biblioteca").select("fk_id_biblioteca").eq("fk_id_usuario",token.user_id)
