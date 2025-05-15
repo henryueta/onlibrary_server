@@ -472,9 +472,10 @@ let current_libraries = [
 server.get("/auth/library", async (req,res)=>{
 
     try{
-        const token = JSON.parse(req.cookies.user_id)
-
+        console.log(req.cookies)
         console.log(token.user_id)
+        const token = JSON.parse(req.cookies.user_id || "")
+        
 
         const user_libraries = await client.from("tb_usuario_biblioteca").select("fk_id_biblioteca").eq("fk_id_usuario",token.user_id)
     //    const admin_libraries =  admin_library.filter((item)=>item.id_admin === token.user_id)
