@@ -50,11 +50,7 @@ book_router.get("/book/list",async (req,res)=>{
 book_router.get("/book/get",async (req,res)=>{
 
   const {id} = req.query
-  !id 
-  &&
-  (()=>{
-    return res.status(500).send(error) 
-  })()
+
   try{
       const book = await onQueryDatabase({
         type:"getEq",
