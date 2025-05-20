@@ -6,7 +6,7 @@ const account_router = express.Router();
 account_router.post("/account/post",async (req,res)=>{
 
   try{
-    const {fk_id_biblioteca,nome,multa_padrao,prazo_devolucao_padrao} = req.body
+    const {fk_id_biblioteca,nome,multa_padrao,prazo_devolucao_padrao,prazo_multa_padrao} = req.body
     //----LOGICA PARA CADASTRAR PERFIS DA BIBLIOTECA--
     const account_id =  await onQueryDatabase({
         type:"post",
@@ -15,7 +15,8 @@ account_router.post("/account/post",async (req,res)=>{
             fk_id_biblioteca:fk_id_biblioteca,
             nome:nome,
             multa_padrao:multa_padrao,
-            prazo_devolucao_padrao:prazo_devolucao_padrao
+            prazo_devolucao_padrao:prazo_devolucao_padrao,
+            prazo_multa_padrao:prazo_multa_padrao
         }
     })
 

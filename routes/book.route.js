@@ -3,6 +3,78 @@ import {onQueryDatabase} from "../functions/query.js"
 
 const book_router = express.Router();
 
+book_router.get("/book/libraries",async (req,res)=>{
+  try {
+    const {id} = req.query
+
+    const libraries = await onQueryDatabase({
+      type:"getEq",
+      table:"vw_biblioteca_reserva_exemplar",
+      getParams:"*",
+      eq:{
+        field:"fk_id_livro",
+        val:id
+      }
+    })
+
+    !!libraries
+    ? res.status(200).send(libraries)
+    : res.status(500).send({message:libraries})
+
+  } catch (error) {
+    res.status(500).send({message:error})
+  }
+})
+
+book_router.get("/book/list",async (req,res)=>{
+
+    const {categoria} = req.query
+
+    try{
+      const books = await onQueryDatabase({
+        type:"get",
+        table:"tb_livro",
+        getParams:"id,titulo,capa"
+      })
+
+      !!books
+      ? res.status(200).send(books)
+      : res.status(200).send({message:books})
+    }
+    catch(error){
+      res.status(500).send({message:error})
+    }
+
+})
+
+book_router.get("/book/get",async (req,res)=>{
+
+  const {id} = req.query
+  !id 
+  &&
+  (()=>{
+    return res.status(500).send(error) 
+  })()
+  try{
+      const book = await onQueryDatabase({
+        type:"getEq",
+        table:"vw_livro",
+        getParams:"*",
+        eq:{
+          field:"id",
+          val:id
+        }
+      })
+
+      !!book
+      ? res.status(200).send(book[0])
+      : res.status(500).send({message:book})
+  }
+  catch(error){
+      res.status(500).send({message:error})
+  }
+
+})
 
 book_router.post("/book/post",async (req,res)=>{
 
