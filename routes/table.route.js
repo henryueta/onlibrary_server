@@ -227,8 +227,19 @@ table_router.get("/count",async (req,res)=>{
     (async()=>{
       switch (type) {
           case "book":
-          count = 0;
-            warn = false
+            const bookCount = await client
+            .from('tb_biblioteca_livro')
+            .select('*', { count: 'exact'})
+            .eq("fk_id_biblioteca",id);
+
+          !!bookCount
+          &&
+          (()=>{
+                  count=bookCount.count,
+                  warn=false
+            })()
+
+
               break;
           case "library_user":
           const userCount = await client
@@ -272,6 +283,20 @@ table_router.get("/count",async (req,res)=>{
                     warn=!!amerceCount.data.filter((item)=>item.situacao === "vencido").length ? true : false
 
             })() 
+            break;
+            case "exemplary":
+              const exemplaryCount = await client
+              .from('tb_exemplar')
+              .select('*', { count: 'exact'})
+              .eq("fk_id_biblioteca",id)
+              !!exemplaryCount
+              &&
+              (()=>{
+  
+                      count=exemplaryCount.count,
+                      warn=false
+  
+              })() 
             break;
           default:
               break;

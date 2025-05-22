@@ -48,6 +48,7 @@ const onQueryDatabase = (query)=>{
     },
     putIn:async()=>{
       tableQuery = await  client.from(query.table).update(query.data).in(query.eq.field,query.eq.array)
+      return tableQuery
     },
     delete:async ()=>{
 

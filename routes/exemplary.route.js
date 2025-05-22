@@ -7,6 +7,32 @@ const exemplary_router = express.Router();
 // exemplary_router.get("/exemplary/get")
 
 
+exemplary_router.get("/exemplary/get",async (req,res)=>{
+
+  try{
+    const {id_biblioteca} = req.query;
+
+    const exemplary_list = await onQueryDatabase({
+      type:"getEq",
+      table:"tb_exemplar",
+      getParams:"disponivel",
+      eq:{
+        field:"fk_id_biblioteca",
+        val:id_biblioteca
+      }
+    })
+
+    !!exemplary_list.length
+    ? res.status(200).send(exemplary_list)
+    : res.status(500).send({message:"error"})
+
+  }
+  catch(error){
+    res.status(500).send({message:error})
+  }
+
+})
+
 exemplary_router.post("/exemplary/post",async(req,res)=>{
 
   try{
@@ -20,8 +46,6 @@ exemplary_router.post("/exemplary/post",async(req,res)=>{
       })
       //----CADASTREI EXEMPLAR(tb_exemplar)--
 
-      
-
       !!exemplary_id.length
       ? (async()=>{
 
@@ -34,7 +58,7 @@ exemplary_router.post("/exemplary/post",async(req,res)=>{
         ?(async()=>{
 
           const bookLibrary_id =
-        await onQueryDatabase({
+        await onQueryDatabase({ 
             type:"post",
             table:"tb_biblioteca_livro",
             data:{

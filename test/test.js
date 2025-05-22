@@ -3,18 +3,41 @@
 // livro teste:  34c6fff7-8216-43bf-8f3d-e22ce0cd7bb6
 
 import client from  "../database/supabase.js"
-const noLibraryanAccount = await client.from("tb_perfil_usuario")
-    .select("*")
-    .eq("id","98c3261b-8e78-433e-b0e8-bcf01c2e7b18")
-    .neq("nome","Bibliotecario")
+import { onQueryDatabase } from "../functions/query.js"
 
-const noAdminUser = "Docente";
+const exemplares_disponiveis = await client
+.from("tb_exemplar")
+.select("id",{count:'exact'})
+.eq("fk_id_biblioteca","35082ee6-5b83-4ff0-b626-a78864386d84")
+.eq("disponivel",true)
 
-!!noLibraryanAccount.data.length && noAdminUser.toLowerCase() !== "admin" 
-? console.log("VALIDO")
-: !noLibraryanAccount.data.length && noAdminUser.toLowerCase() === "admin"
-? console.log("Cadastrar Admin")
-: console.log("Invalido")
+let current_exemplaries = [];
 
-    !!noLibraryanAccount.data.length &&
-    console.log(noLibraryanAccount.data)
+
+// const exemplares = await onQueryDatabase({
+//     type:"getEq",
+//     table:"tb_exemplar",
+//     getParams:"id",
+//     eq:{
+//         field:"fk_id_biblioteca",
+//         val:"35082ee6-5b83-4ff0-b626-a78864386d84"
+//     }
+// })
+const quantidade = 5;
+
+
+!!exemplares_disponiveis
+? current_exemplaries = exemplares_disponiveis.data.slice(0,quantidade)
+: console.log(exemplares_disponiveis.error)
+
+!!current_exemplaries
+&&
+current_exemplaries.forEach((item)=>{
+    console.log("alterar "+item+" para reservado")
+})
+
+const pendences = quantidade - current_exemplaries.length
+
+
+console.log("Colocar como quantidade de exemplares pendentes o valor: "+pendences)
+

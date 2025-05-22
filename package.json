@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev":"node api/index.js"
+    "dev": "node api/index.js"
   },
   "type": "module",
   "keywords": [],
@@ -16,6 +16,7 @@
     "cors": "^2.8.5",
     "express": "^4.21.2",
     "nodemon": "^3.1.9",
+    "npx": "^3.0.0",
     "pg": "^8.15.6",
     "wss": "^0.0.2"
   }

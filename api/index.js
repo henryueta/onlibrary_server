@@ -11,6 +11,7 @@ import library_user_router from "../routes/library_user.route.js";
 import book_router from "../routes/book.route.js";
 import exemplary_router from "../routes/exemplary.route.js";
 import notification_router from "../routes/notification.route.js";
+import reserve_router from "../routes/reserve.route.js";
 
 const server = express();
 
@@ -29,6 +30,7 @@ server.use(table_router);
 server.use(book_router);
 server.use(exemplary_router);
 server.use(loan_router);
+server.use(reserve_router);
 server.use(account_router);
 server.use(library_user_router);
 server.use(notification_router);
@@ -363,7 +365,6 @@ server.get("/tables/data",async (req,res)=>{
                 !!tableData
                 ? res.status(200).send(tableData)
                 : (()=>{
-                    console.log("AA")
                     res.status(500).send([])
                 })()   
                 }
@@ -374,7 +375,7 @@ server.get("/tables/data",async (req,res)=>{
 
     try{
         const {type,id,id_biblioteca} = req.query
-
+        console.log(req.query)
         switch(type){
 
             case "book":
