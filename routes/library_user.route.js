@@ -4,6 +4,52 @@ import client from "../database/supabase.js";
 
 const library_user_router = express.Router();
 
+library_user_router.get("/library_user/get/dependencies",async(req,res)=>{
+
+  try{
+      let array = {};
+      const {id,id_biblioteca} = req.query
+      const library_user_data = await client.from("tb_usuario_biblioteca")
+      .select("numero_matricula,tipo_usuario,fk_id_perfil_usuario")
+      .eq("id",id)
+      .eq("fk_id_biblioteca",id_biblioteca)
+  
+                  !!library_user_data.data
+                  &&
+                  (async()=>{
+                      const accounts_id =  await client
+                    .from("tb_perfil_usuario")
+                    .select("label:nome,value:id")
+                    .eq("fk_id_biblioteca",id_biblioteca)
+                    .eq("id",library_user_data.data[0].fk_id_perfil_usuario)
+                    
+
+                    !!accounts_id.data 
+                    &&
+                    (async()=>{
+                      array = {
+                      numero_matricula:library_user_data.data[0].numero_matricula,
+                      tipo_usuario: {
+                        label:library_user_data.data[0].tipo_usuario === "admin"
+                        ? "Administrador"
+                        : "Comum",
+                        value:library_user_data.data[0].tipo_usuario
+                      },
+                      perfis_biblioteca: accounts_id.data[0]
+                    }
+                    console.log(array)
+                    res.status(200).send(array)
+                    })()
+                  })()
+      
+  }
+  catch(error){
+    res.status(500).send({message:error})
+  }
+
+})
+
+
 library_user_router.get("/library_user/check",async (req,res)=>{
 
   try{

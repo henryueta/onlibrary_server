@@ -4,6 +4,31 @@ import client from "../database/supabase.js";
 
 const reserve_router = express.Router();
 
+reserve_router.get("/reserve/get",async(req,res)=>{
+
+  try{
+
+    const {type,id_biblioteca} =  req.query;
+    let reserve_id
+    switch (type) {
+      case "online":
+
+
+
+        break;
+      case "fisico":
+
+        break;
+      default:
+        break;
+    }
+
+  }
+  catch(error){
+    res.status(500).send({message:error})
+  }
+
+})
 
 reserve_router.post("/reserve/post",async(req,res)=>{
 
@@ -20,6 +45,7 @@ reserve_router.post("/reserve/post",async(req,res)=>{
       .from("tb_exemplar")
       .select("id",{count:'exact'})
       .eq("fk_id_biblioteca",req.body.fk_id_biblioteca)
+      .eq("fk_id_livro",req.body.fk_id_livro)
       .eq("disponivel",true)
       
       let current_exemplaries = [];
@@ -37,6 +63,7 @@ reserve_router.post("/reserve/post",async(req,res)=>{
           fk_id_biblioteca:req.body.fk_id_biblioteca,
           fk_id_usuario:req.body.fk_id_usuario,
           fk_id_bibliotecario:null,
+          fk_id_livro:req.body.fk_id_livro,
           data_emissao:(()=>{
               const now = new Date();
               return now.toISOString().split("T")[0]

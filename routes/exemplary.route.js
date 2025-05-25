@@ -6,25 +6,84 @@ const exemplary_router = express.Router();
 
 // exemplary_router.get("/exemplary/get")
 
+exemplary_router.get("/exemplary/get/dependencies",async (req,res)=>{
+
+  try{
+    let array = {};
+    const {id,id_biblioteca} = req.query
+    //livros_biblioteca,numero_tombo,disponivel,setor,prateleira,estante
+    const exemplary_data = await client
+    .from("tb_exemplar")
+    .select("numero_tombo,disponivel,setor,prateleira,estante,fk_id_livro")
+    .eq("fk_id_biblioteca",id_biblioteca)
+    .eq('id',id)
+
+    !!exemplary_data.data
+    ? (async()=>{
+
+      const current_book = await onQueryDatabase({
+              type:"getEq",
+              table:"tb_livro",
+              getParams:"ISBN,titulo,id",
+              eq:{
+                field:"id",
+                val:exemplary_data.data[0].fk_id_livro
+              }
+            });
+              !!current_book.length
+              ? (()=>{
+
+                array = {
+                  livros_biblioteca:{
+                      label:current_book[0].titulo+" ISBN:("+current_book[0].ISBN+")",
+                      value:current_book[0].id
+                    },
+                  numero_tombo: exemplary_data.data[0].numero_tombo,
+                  disponivel:exemplary_data.data[0].disponivel 
+                  ? {
+                    label:"Disponível",
+                    value:true
+                  }
+                  : {
+                    label:"Indisponível",
+                    value:false
+                  },
+                  setor:exemplary_data.data[0].setor,
+                  prateleira:exemplary_data.data[0].prateleira,
+                  estante:exemplary_data.data[0].estante
+                }
+
+                res.status(200).send(array)
+              })()
+              : res.status(500).send({message:current_book})
+
+    })()
+    : res.status(500).send({message:exemplary_data.error})
+
+  }
+  catch(error){
+    res.status(500).send({message:error})
+  }
+
+})
 
 exemplary_router.get("/exemplary/get",async (req,res)=>{
 
   try{
-    const {id_biblioteca} = req.query;
+    const {id_biblioteca,id_livro} = req.query;
 
-    const exemplary_list = await onQueryDatabase({
-      type:"getEq",
-      table:"tb_exemplar",
-      getParams:"disponivel",
-      eq:{
-        field:"fk_id_biblioteca",
-        val:id_biblioteca
-      }
-    })
+    const exemplary_list = await client
+        .from("tb_exemplar")
+        .select("disponivel")
+        .eq("fk_id_biblioteca",id_biblioteca)
+        .eq("fk_id_livro",id_livro)
 
-    !!exemplary_list.length
-    ? res.status(200).send(exemplary_list)
-    : res.status(500).send({message:"error"})
+    !!exemplary_list.data
+    ? (()=>{
+      console.log(exemplary_list.data)
+      return res.status(200).send(exemplary_list.data)
+    })()
+    : res.status(500).send({message:exemplary_list})
 
   }
   catch(error){

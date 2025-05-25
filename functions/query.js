@@ -13,7 +13,7 @@ const onQueryDatabase = (query)=>{
 
       return !!tableQuery
       && tableQuery.error
-      ? null
+      ? tableQuery
       : tableQuery.data
     },
     get:async ()=>{
@@ -22,7 +22,7 @@ const onQueryDatabase = (query)=>{
 
        return !!tableQuery
        && tableQuery.error
-       ? null
+       ? tableQuery
        : tableQuery.data
     },
     getIn:async ()=>{
@@ -30,7 +30,7 @@ const onQueryDatabase = (query)=>{
         
           return !!tableQuery
           && tableQuery.error
-          ? null
+          ? tableQuery
           : tableQuery.data
     },
     post:async ()=>{
@@ -44,7 +44,15 @@ const onQueryDatabase = (query)=>{
             : tableQuery.data[0].id
     },
     put:async ()=>{
-      tableQuery = await client.from(query.table).update(query.data).eq(query.eq.field,query.eq.val)
+      tableQuery = await client.from(query.table).update(query.data).eq(query.eq.field,query.eq.val).select(query.getParams)
+
+      return !!tableQuery
+      && tableQuery.error
+      ? (()=>{
+        console.log(tableQuery)
+        return tableQuery
+      })()
+      : tableQuery.data[0][query.getParams]
     },
     putIn:async()=>{
       tableQuery = await  client.from(query.table).update(query.data).in(query.eq.field,query.eq.array)

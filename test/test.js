@@ -5,39 +5,45 @@
 import client from  "../database/supabase.js"
 import { onQueryDatabase } from "../functions/query.js"
 
-const exemplares_disponiveis = await client
-.from("tb_exemplar")
-.select("id",{count:'exact'})
-.eq("fk_id_biblioteca","35082ee6-5b83-4ff0-b626-a78864386d84")
-.eq("disponivel",true)
+const teste = [
+    {
+        fk_id_livro:"1",
+        id:"!$"
+    },
+    {
+        fk_id_livro:"2",
+        id:"14"
+    }
 
-let current_exemplaries = [];
+]
 
+const teste2 = [
 
-// const exemplares = await onQueryDatabase({
-//     type:"getEq",
-//     table:"tb_exemplar",
-//     getParams:"id",
-//     eq:{
-//         field:"fk_id_biblioteca",
-//         val:"35082ee6-5b83-4ff0-b626-a78864386d84"
-//     }
+    {
+        fk_id_livro:"14"
+    },
+    {
+        fk_id_livro:"2"
+    },
+    {
+        fk_id_livro:"1"
+    }
+
+]
+
+console.log(teste.filter((item)=>{
+    return !teste2.includes({
+        fk_id_livro:item.fk_id_livro
+    })
+}).map((item)=>item.id))
+
+// const exemplares_disponiveis = await client
+// .from("tb_usuario")
+// .update({
+//     nome:"Peidro"
 // })
-const quantidade = 5;
+// .eq("id","04873ff5-5b48-4b99-bb73-0546312c5180")
+// .select("id")
 
-
-!!exemplares_disponiveis
-? current_exemplaries = exemplares_disponiveis.data.slice(0,quantidade)
-: console.log(exemplares_disponiveis.error)
-
-!!current_exemplaries
-&&
-current_exemplaries.forEach((item)=>{
-    console.log("alterar "+item+" para reservado")
-})
-
-const pendences = quantidade - current_exemplaries.length
-
-
-console.log("Colocar como quantidade de exemplares pendentes o valor: "+pendences)
-
+// !!exemplares_disponiveis.data
+// && console.log(exemplares_disponiveis.data)

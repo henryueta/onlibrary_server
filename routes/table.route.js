@@ -9,7 +9,19 @@ table_router.get("/data/group",async(req,res)=>{
 ///////////////////////////////////////
         const {type,id,userId} = req.query
         ///////////////////////////////
+             //parametros URL: usar [type(livro,usuario_biblioteca...),id(da biblioteca)]
 
+        //livro: retornar [autores,categorias,generos,editoras]
+
+        //usuario_biblioteca: retornar [usuarios,perfis_biblioteca]
+
+        //emprestimo: retornar [exemplares_biblioteca,usuarios_biblioteca]
+
+        //reserva: retornar [exemplares_biblioteca,usuarios_biblioteca]
+
+        //multa: retornar [usuarios_biblioteca]
+
+        //exemplar: retornar [livros_biblioteca]
         switch (type) {
             case "library_user":
             (async()=>{
@@ -18,6 +30,7 @@ table_router.get("/data/group",async(req,res)=>{
                const current_libraryUsersId = await client.from("tb_usuario_biblioteca")
               .select("fk_id_usuario")
               .eq("fk_id_biblioteca",id);
+                
 
                return !!current_libraryUsersId.data
                 ? client.from("tb_usuario")
@@ -25,7 +38,7 @@ table_router.get("/data/group",async(req,res)=>{
                 .not('id','in',`(${current_libraryUsersId.data.map((item)=>item.fk_id_usuario)})`)
                 : []
               })()
-
+              
 
 
               array = {
@@ -85,7 +98,7 @@ table_router.get("/data/group",async(req,res)=>{
                 array = {
                   livros_biblioteca:current_books.map((item,index)=>{
                     return ({
-                      label:item.titulo+" ("+item.ISBN+")",
+                      label:item.titulo+" ISBN:("+item.ISBN+")",
                       value:item.id
                     })
                   })
@@ -211,25 +224,13 @@ table_router.get("/count",async (req,res)=>{
 
     let count =  0;
     let warn = false;
-        //parametros URL: usar [type(livro,usuario_biblioteca...),id(da biblioteca)]
-
-        //livro: retornar [autores,categorias,generos,editoras]
-
-        //usuario_biblioteca: retornar [usuarios,perfis_biblioteca]
-
-        //emprestimo: retornar [exemplares_biblioteca,usuarios_biblioteca]
-
-        //reserva: retornar [exemplares_biblioteca,usuarios_biblioteca]
-
-        //multa: retornar [usuarios_biblioteca]
-
-        //exemplar: retornar [livros_biblioteca]
+ 
     (async()=>{
       switch (type) {
           case "book":
             const bookCount = await client
             .from('tb_biblioteca_livro')
-            .select('*', { count: 'exact'})
+            .select('id', { count: 'exact'})
             .eq("fk_id_biblioteca",id);
 
           !!bookCount
@@ -244,7 +245,7 @@ table_router.get("/count",async (req,res)=>{
           case "library_user":
           const userCount = await client
             .from('tb_usuario_biblioteca')
-            .select('*', { count: 'exact'})
+            .select('id', { count: 'exact'})
             .eq("fk_id_biblioteca",id);
 
           !!userCount
@@ -287,7 +288,7 @@ table_router.get("/count",async (req,res)=>{
             case "exemplary":
               const exemplaryCount = await client
               .from('tb_exemplar')
-              .select('*', { count: 'exact'})
+              .select('id', { count: 'exact'})
               .eq("fk_id_biblioteca",id)
               !!exemplaryCount
               &&
@@ -298,9 +299,31 @@ table_router.get("/count",async (req,res)=>{
   
               })() 
             break;
-          default:
-              break;
-
+          case "reserve":
+              const reserveCount = await client
+              .from("tb_reserva")
+              .select('situacao', { count: 'exact'})
+              .eq("fk_id_biblioteca",id)
+              !!reserveCount
+              &&
+              (()=>{
+                count = reserveCount.count
+                warn=false
+              })()
+          break;
+          case "online_reserve":
+              const onlineReserveCount = await client
+              .from("tb_reserva")
+              .select('situacao', { count: 'exact'})
+              .eq("fk_id_biblioteca",id)
+              .eq("tipo","online")
+              !!onlineReserveCount
+              &&
+              (()=>{
+                count = onlineReserveCount.count
+                warn=!!onlineReserveCount.data.filter((item)=>item.situacao === "pendente").length ? true : false
+              })()
+          break;
 
         }
         res.status(200).send({quantidade:count,aviso:warn})

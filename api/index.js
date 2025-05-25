@@ -15,6 +15,11 @@ import reserve_router from "../routes/reserve.route.js";
 
 const server = express();
 
+//put
+//loan - ao mudar a situação para cancelado ou concluido tornar exemplares do emprestimo como disponíveis
+//library_user - 
+//
+
 
 server.use(express.json());
 
@@ -364,9 +369,7 @@ server.get("/tables/data",async (req,res)=>{
 
                 !!tableData
                 ? res.status(200).send(tableData)
-                : (()=>{
-                    res.status(500).send([])
-                })()   
+                : res.status(500).send([])
                 }
                 catch(error){
                     console.log(error)
@@ -406,6 +409,32 @@ server.get("/tables/data",async (req,res)=>{
                  (async()=>{
                     await onGetView("vw_table_multa",id,id_biblioteca)
                 })()
+                case "reserve":
+                    (async()=>{
+                        const reserve = await client.from("vw_table_reserva")
+                        .select("*")
+                        .eq("fk_id_biblioteca",id_biblioteca)
+                        .eq("tipo","fisico");
+
+                        !!reserve.data
+                        ? res.status(200).send(reserve.data)
+                        : res.status(500).send({message:reserve.error})
+
+                    })()
+                break;
+                case "online_reserve":
+                    (async()=>{
+
+                        const onlinReserve = await client.from("vw_table_reserva")
+                        .select("*")
+                        .eq("fk_id_biblioteca",id_biblioteca)
+                        .eq("tipo","online");
+
+                        !!onlinReserve.data
+                        ? res.status(200).send(onlinReserve.data)
+                        : res.status(500).send({message:onlinReserve.error})
+
+                    })()
                break;
         }
     }
