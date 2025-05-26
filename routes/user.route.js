@@ -1,8 +1,35 @@
 import express from "express";
-import {onGetToken} from "../functions/query.js"
+import {onGetToken, onQueryDatabase} from "../functions/query.js"
 
 const user_router = express.Router();
 
+user_router.get("/user/get/username",async (req,res)=>{
+
+    try{
+        const {id} = req.query
+        const user_data = await onQueryDatabase({
+            type:"getEq",
+            table:"tb_usuario",
+            getParams:"username",
+            eq:{
+                field:"id",
+                val:id
+            }
+        })
+
+        !!user_data
+        ? res.status(200).send(user_data)
+        : (()=>{
+            console.log(user_data)
+            res.status(500).send({message:user_data})
+        })()
+    }
+    catch(error){
+        console.log(error)
+        res.status(500).send({message:error})
+    }
+
+})
 
 user_router.post("/check/account",async (req,res)=>{
     console.log(req.body)

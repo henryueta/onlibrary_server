@@ -12,6 +12,7 @@ import book_router from "../routes/book.route.js";
 import exemplary_router from "../routes/exemplary.route.js";
 import notification_router from "../routes/notification.route.js";
 import reserve_router from "../routes/reserve.route.js";
+import category_router from "../routes/category.route.js";
 
 const server = express();
 
@@ -33,12 +34,14 @@ server.use(cookieParser())
 server.use(user_route);
 server.use(table_router);
 server.use(book_router);
+server.use(category_router)
 server.use(exemplary_router);
 server.use(loan_router);
 server.use(reserve_router);
 server.use(account_router);
 server.use(library_user_router);
 server.use(notification_router);
+
 
 server.get("/books",(req,res)=>{
 
