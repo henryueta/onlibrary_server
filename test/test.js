@@ -5,45 +5,20 @@
 import client from  "../database/supabase.js"
 import { onQueryDatabase } from "../functions/query.js"
 
-const teste = [
-    {
-        fk_id_livro:"1",
-        id:"!$"
-    },
-    {
-        fk_id_livro:"2",
-        id:"14"
-    }
 
-]
 
-const teste2 = [
+(async()=>{
 
-    {
-        fk_id_livro:"14"
-    },
-    {
-        fk_id_livro:"2"
-    },
-    {
-        fk_id_livro:"1"
-    }
+  const library_user_data = await client
+  .from("vw_table_usuario_biblioteca")
+  .select("*")
+  .ilike("username","F%")
 
-]
+  library_user_data.data
+  ? (()=>{
+    console.log(library_user_data.data)
+  })()
+  : console.log(library_user_data.error)
 
-console.log(teste.filter((item)=>{
-    return !teste2.includes({
-        fk_id_livro:item.fk_id_livro
-    })
-}).map((item)=>item.id))
-
-// const exemplares_disponiveis = await client
-// .from("tb_usuario")
-// .update({
-//     nome:"Peidro"
-// })
-// .eq("id","04873ff5-5b48-4b99-bb73-0546312c5180")
-// .select("id")
-
-// !!exemplares_disponiveis.data
-// && console.log(exemplares_disponiveis.data)
+}
+)()

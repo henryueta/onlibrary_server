@@ -3,6 +3,9 @@ import {onQueryDatabase} from "../functions/query.js";
 import client from '../database/supabase.js';
 const notification_router = express.Router();
 
+
+
+
 notification_router.get("/notification/get",async (req,res)=>{
 
     try{
@@ -14,8 +17,8 @@ notification_router.get("/notification/get",async (req,res)=>{
                         .select("*")
                         .eq("fk_id_usuario",id_usuario)
                         .eq("fk_id_biblioteca",id_biblioteca)
-                        .eq("tipo","admin");
-
+                        .eq("tipo","ADMIN")
+                        .neq("deletado",true)
 
                         !!notification_data
                         ? res.status(200).send(notification_data.data)
@@ -24,7 +27,11 @@ notification_router.get("/notification/get",async (req,res)=>{
                 break;
             case "comum":
                     (async()=>{
-                      const notification_data = await client.from("tb_notificacao").select("*").eq("fk_id_usuario",id_usuario).eq("tipo","comum");
+                      const notification_data = await client.from("tb_notificacao")
+                      .select("*")
+                      .eq("fk_id_usuario",id_usuario)
+                      .eq("tipo","comum")
+                      .neq("deletado",true);
 
 
                       !!notification_data

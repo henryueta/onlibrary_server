@@ -8,15 +8,16 @@ category_router.get("/category/get",async (req,res)=>{
 
     try {
 
-        const category_data = await onQueryDatabase({
-            type:"get",
-            table:"tb_categoria",
-            getParams:"nome"
-        })
 
-        !!category_data
-        ? res.status(200).send(category_data)
-        : res.status(500).send(category_data)
+
+        const category_data = await client
+        .from("tb_categoria")
+        .select("nome")
+        .neq("deletado",true)
+
+        !!category_data.data
+        ? res.status(200).send(category_data.data)
+        : res.status(500).send(category_data.error)
 
     } catch (error) {
         console.log(error)

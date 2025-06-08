@@ -4,16 +4,60 @@ import client from "../database/supabase.js";
 
 const library_user_router = express.Router();
 
+library_user_router.get("/library_user/get/search", async (req,res)=>{
+
+  try {
+    const {value,filter} = req.query
+
+    filter.toLowerCase() !== "todos"
+    ?
+    (async()=>{
+      
+      const library_user_data = await client
+    .from("vw_table_usuario_biblioteca")
+    .select("*")
+    .ilike(filter,value+"%")
+
+    library_user_data.data
+    ? (()=>{
+      console.log(library_user_data.data)
+      res.status(200).send(library_user_data.data)
+    })()
+    : library_user_data.error
+    ? res.status(500).send(library_user_data.error)
+    : res.status(200).send([])
+    })()
+    : (async()=>{
+
+      const library_user_data = await client
+      .from("vw_table_usuario_biblioteca")
+      .select("*")
+      .ilike("username",value+"%")
+      
+    })()
+
+
+    
+
+
+  } catch (error) {
+    console.log(error)
+    res.status(500).send({message:error})
+  }
+
+})
+
 library_user_router.get("/library_user/get/dependencies",async(req,res)=>{
 
   try{
       let array = {};
       const {id,id_biblioteca} = req.query
       const library_user_data = await client.from("tb_usuario_biblioteca")
-      .select("numero_matricula,tipo_usuario,fk_id_perfil_usuario")
+      .select("numero_matricula,cpf,tipo_usuario,fk_id_perfil_usuario,fk_id_usuario")
       .eq("id",id)
       .eq("fk_id_biblioteca",id_biblioteca)
-  
+      .neq("deletado",true)
+
                   !!library_user_data.data
                   &&
                   (async()=>{
@@ -22,13 +66,29 @@ library_user_router.get("/library_user/get/dependencies",async(req,res)=>{
                     .select("label:nome,value:id")
                     .eq("fk_id_biblioteca",id_biblioteca)
                     .eq("id",library_user_data.data[0].fk_id_perfil_usuario)
-                    
+                    .neq("deletado",true)
 
-                    !!accounts_id.data 
+
+
+                    !!accounts_id.data
+                    ? (async ()=>{
+
+                      const user_id = await client
+                      .from("tb_usuario")
+                      .select("label:username,value:id")
+                      .eq("id",library_user_data.data[0].fk_id_usuario)
+                      .neq("deletado",true)
+
+                      !!user_id.data 
                     &&
                     (async()=>{
                       array = {
+                      usuarios:{
+                        label:user_id.data[0].label,
+                        value:user_id.data[0].value
+                      },
                       numero_matricula:library_user_data.data[0].numero_matricula,
+                      cpf:library_user_data.data[0].cpf,
                       tipo_usuario: {
                         label:library_user_data.data[0].tipo_usuario === "admin"
                         ? "Administrador"
@@ -40,6 +100,11 @@ library_user_router.get("/library_user/get/dependencies",async(req,res)=>{
                     console.log(array)
                     res.status(200).send(array)
                     })()
+
+                    })()
+                    : res.status(500).send({message:accounts_id.error})
+
+                    
                   })()
       
   }
@@ -58,14 +123,16 @@ library_user_router.get("/library_user/check",async (req,res)=>{
       const library_user_data = await client.from("tb_usuario_biblioteca")
                         .select("situacao")
                         .eq("fk_id_usuario",id_usuario)
-                        .eq("fk_id_biblioteca",id_biblioteca);
-                        
+                        .eq("fk_id_biblioteca",id_biblioteca)
+                        .neq("deletado",true);
+
                         const user_armece = await client.from("tb_multa")
                         .select("*")
                         .eq("fk_id_usuario",id_usuario)
                         .neq("situacao","concluido")
                         .neq("situacao","cancelado")
-        
+                        .neq("deletado",true);
+
                         !!user_armece.data
                         ? res.status(200).send(library_user_data.data)
                         : res.status(500).send({message:"error"})
@@ -126,6 +193,51 @@ library_user_router.post("/library_user/post", async (req,res)=>{
   }
   catch(error){
     res.status(500).send({message:"error"})
+  }
+
+})
+
+library_user_router.delete("/library_user/delete",async (req,res)=>{
+
+  try {
+    const {id} = req.query
+    console.log("ID",id)
+    const library_user_data = await onQueryDatabase({
+      type:"getEq",
+      table:"tb_usuario_biblioteca",
+      getParams:"deletado,fk_id_biblioteca",
+      eq:{
+        field:"id",
+        val:id
+      }
+    })
+
+    !!library_user_data
+    &&
+    console.warn("DELETADO",library_user_data)
+
+    !!library_user_data
+    &&
+    (async()=>{
+
+      const view = await onQueryDatabase({
+      type:"getEq",
+      table:"vw_table_perfil_usuario",
+      eq:{
+        field:"fk_id_biblioteca",
+        val:library_user_data[0].fk_id_biblioteca
+      }
+    })
+
+    !!library_user_data && view
+    ? res.status(200).send(view)
+    : res.status(500).send({message:"error"})
+
+    })()
+
+  } catch (error) {
+    console.log(error)
+    res.status(500).send({message:error})
   }
 
 })

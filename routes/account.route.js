@@ -15,6 +15,7 @@ account_router.get("/account/get/dependencies",async (req,res)=>{
     .select("nome,multa_padrao,prazo_devolucao_padrao,prazo_multa_padrao")
     .eq("fk_id_biblioteca",id_biblioteca)
     .eq("id",id)
+    .neq("deletado",true)
 
     !!account_data.data
     ? (()=>{

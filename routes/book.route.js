@@ -1,7 +1,33 @@
 import express from "express";
 import {onQueryDatabase} from "../functions/query.js"
+import client from "../database/supabase.js";
 
 const book_router = express.Router();
+
+book_router.get("/book/get/search",async (req,res)=>{
+
+  try {
+    const {filter,value} = req.query
+    const book_data = await onQueryDatabase({
+      type:"getEq",
+      table:"tb_livro",
+      getParams:"titulo,capa",
+      eq:{
+        field:filter,
+        val:value
+      }
+    })
+
+    !!book_data
+    ? res.status(200).send(book_data)
+    : res.status(500).send(book_data)
+
+  } catch (error) {
+    res.status(500).send({message:error})
+    console.log(error)
+  }
+
+})
 
 book_router.get("/book/libraries",async (req,res)=>{
   try {
@@ -31,15 +57,15 @@ book_router.get("/book/list",async (req,res)=>{
     const {categoria} = req.query
 
     try{
-      const books = await onQueryDatabase({
-        type:"get",
-        table:"tb_livro",
-        getParams:"id,titulo,capa"
-      })
 
-      !!books
-      ? res.status(200).send(books)
-      : res.status(200).send({message:books})
+      const books_data = await client
+      .from("tb_livro")
+      .select("id,titulo,capa")
+      .neq("deletado",true)
+
+      !!books_data.data
+      ? res.status(200).send(books_data.data)
+      : res.status(200).send({message:books_data.error})
     }
     catch(error){
       res.status(500).send({message:error})
@@ -79,10 +105,10 @@ book_router.post("/book/post",async (req,res)=>{
       const check_book = await onQueryDatabase({
         type:"getEq",
         table:"tb_livro",
-        getParams:"ISBN",
+        getParams:"isbn",
         eq:{
-          field:"ISBN",
-          val:req.body.ISBN
+          field:"isbn",
+          val:req.body.isbn
         }
       })
 

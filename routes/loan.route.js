@@ -15,6 +15,37 @@ const setLoanDate = (days)=>{
 }
 
 
+loan_router.get("/loan/get/user",async (req,res)=>{
+
+  try{
+
+    const {id} = req.query
+    const loan_data = await onQueryDatabase({
+      type:"getEq",
+      table:"vw_table_emprestimo",
+      eq:{
+        field:"fk_id_usuario",
+        val:id
+      }
+        
+    })
+
+    !!loan_data
+    && console.log(loan_data)
+
+    !!loan_data
+    ? res.status(200).send(loan_data)
+    : res.status(500).send(loan_data)
+
+
+
+  }
+  catch(error){
+    res.status(500).send({message:error})
+  }
+
+})
+
 loan_router.get("/loan/get/dependencies",async (req,res)=>{
 
   try{
@@ -24,13 +55,61 @@ loan_router.get("/loan/get/dependencies",async (req,res)=>{
 
     const loan_data = await client
     .from("tb_emprestimo")
-    .select("situacao,data_devolucao")
+    .select("situacao,data_devolucao,fk_id_usuario_biblioteca,id")
     .eq("fk_id_biblioteca",id_biblioteca)
     .eq("id",id)
+    .neq("deletado",true)
 
     !!loan_data.data
-    ? (()=>{
-      array = {
+    ?
+    (async()=>{
+
+      const users_data = await onQueryDatabase({
+               type:"getEq",
+               table:"vw_usuario_biblioteca",
+               getParams:"value:usuario_biblioteca_id,label:username",
+               eq:{
+                 field:"usuario_biblioteca_id",
+                 val:loan_data.data[0].fk_id_usuario_biblioteca
+               }
+             })
+    
+
+      const loan_exemplaries = await onQueryDatabase({
+        type:"get",
+        table:"tb_emprestimo_exemplar",
+        getParams:"fk_id_exemplar",
+        eq:{
+          field:"fk_id_emprestimo",
+          val:loan_data.data[0].id
+        }
+      })
+
+      !!loan_exemplaries
+      &&
+      (async()=>{
+        console.log(loan_exemplaries)
+    const exemplaries_data = await client.from("tb_exemplar")
+      .select("label:numero_tombo,value:id")
+      .in('id',loan_exemplaries.map((item)=>{
+        return item.fk_id_exemplar
+      }))
+      .eq("situacao","DISPONIVEL")
+      .neq("deletado",true)
+      
+        !!users_data && !!exemplaries_data
+        &&
+       (()=>{
+         
+    array = {
+      usuarios_biblioteca:{
+        label:users_data[0].label,
+        value:users_data[0].value
+      },
+      exemplares_biblioteca:{
+        label:exemplaries_data.data[0].label,
+        value:exemplaries_data.data[0].value
+      },
       situacao:{
         label:"Pendente",
         value:loan_data.data[0].situacao
@@ -38,7 +117,13 @@ loan_router.get("/loan/get/dependencies",async (req,res)=>{
       data_devolucao: loan_data.data[0].data_devolucao
     }
       res.status(200).send(array)
+
+       })()
+
+      })()
+
     })()
+
     : res.status(500).send({message:loan_data.error})
 
 
@@ -120,7 +205,7 @@ loan_router.post("/loan/post",async(req,res)=>{
             type:"putIn",
             table:"tb_exemplar",
             data:{
-              disponivel:false
+              situacao:"DISPONIVEL"
             },
             eq:{
               field:"id",

@@ -4,6 +4,115 @@ import client from "../database/supabase.js";
 
 const reserve_router = express.Router();
 
+reserve_router.get("/reserve/get/dependencies",async (req,res)=>{
+
+  try {
+    const {id} = req.query
+    let array = {};
+    const reserve_data = await onQueryDatabase({
+      type:"getEq",
+      table:"tb_reserva",
+      getParams:"fk_id_livro,quantidade_total,fk_id_usuario,situacao,data_retirada",
+      eq:{
+        field:"id",
+        val:id
+      }
+    })
+
+    !!reserve_data
+    ?
+    (async()=>{
+      console.log("resera",reserve_data)
+
+        const reserve_book_data = await onQueryDatabase({
+          type:"getEq",
+          table:"tb_livro",
+          getParams:"label:titulo,value:id",
+          eq:{
+            field:"id",
+            val:reserve_data[0].fk_id_livro
+          }
+        })
+
+        const reserve_user_data = await onQueryDatabase({
+          type:"getEq",
+          table:"tb_usuario",
+          getParams:"label:username,value:id",
+          eq:{
+            field:"id",
+            val:reserve_data[0].fk_id_usuario
+          }
+        })
+
+        !!reserve_book_data && !!reserve_user_data
+        ? (()=>{  
+
+          console.log("book",reserve_book_data)
+          console.log('user',reserve_user_data)
+
+          array = {
+            data_retirada:reserve_data[0].data_retirada,
+            livros_biblioteca:{
+              label:reserve_book_data[0].label,
+              value:reserve_book_data[0].value
+            },
+            quantidade_total:reserve_data[0].quantidade_total,
+            situacao:{
+              label:reserve_data[0].situacao.toLowerCase(),
+              value:reserve_data[0].situacao.toLowerCase()
+            },
+            usuarios_biblioteca:{
+              label:reserve_user_data[0].label,
+              value:reserve_user_data[0].value
+            }
+          }
+          res.status(200).send(array)
+        })()
+        : res.status(500).send({message:[
+          reserve_book_data,reserve_user_data
+        ]})
+
+
+    })()
+    : res.status(500).send({message:reserve_data})
+
+  } catch (error) {
+    res.status(500).send({message:error})
+    console.log(error)
+  }
+
+})
+
+reserve_router.get("/reserve/get/user",async (req,res)=>{
+
+  try{
+
+    const {id} = req.query
+    const reserve_data = await onQueryDatabase({
+      type:"getEq",
+      table:"vw_table_reserva",
+      eq:{
+        field:"fk_id_usuario",
+        val:id
+      }
+        
+    })
+
+    !!reserve_data
+    && console.log(reserve_data)
+
+    !!reserve_data
+    ? res.status(200).send(reserve_data)
+    : res.status(500).send(reserve_data)
+
+  }
+  catch(error){
+    console.log(error)
+    res.status(500).send({message:error})
+  }
+
+})
+
 reserve_router.get("/reserve/get",async(req,res)=>{
 
   try{
@@ -12,8 +121,6 @@ reserve_router.get("/reserve/get",async(req,res)=>{
     let reserve_id
     switch (type) {
       case "online":
-
-
 
         break;
       case "fisico":
@@ -46,7 +153,7 @@ reserve_router.post("/reserve/post",async(req,res)=>{
       .select("id",{count:'exact'})
       .eq("fk_id_biblioteca",req.body.fk_id_biblioteca)
       .eq("fk_id_livro",req.body.fk_id_livro)
-      .eq("disponivel",true)
+      .eq("situacao","DISPONIVEL")
       
       let current_exemplaries = [];
       

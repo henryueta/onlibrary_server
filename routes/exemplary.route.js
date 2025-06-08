@@ -14,38 +14,53 @@ exemplary_router.get("/exemplary/get/dependencies",async (req,res)=>{
     //livros_biblioteca,numero_tombo,disponivel,setor,prateleira,estante
     const exemplary_data = await client
     .from("tb_exemplar")
-    .select("numero_tombo,disponivel,setor,prateleira,estante,fk_id_livro")
+    .select("numero_tombo,situacao,setor,prateleira,estante,fk_id_livro")
     .eq("fk_id_biblioteca",id_biblioteca)
     .eq('id',id)
+    .neq("deletado",true)
 
     !!exemplary_data.data
     ? (async()=>{
 
-      const current_book = await onQueryDatabase({
-              type:"getEq",
-              table:"tb_livro",
-              getParams:"ISBN,titulo,id",
-              eq:{
-                field:"id",
-                val:exemplary_data.data[0].fk_id_livro
-              }
-            });
-              !!current_book.length
+      const current_book = 
+      await client.from("tb_livro")
+      .select("isbn,titulo,id")
+      .eq("id",exemplary_data.data[0].fk_id_livro)
+      .neq("deletado",true)
+      
+
+              !!current_book.data
               ? (()=>{
 
                 array = {
                   livros_biblioteca:{
-                      label:current_book[0].titulo+" ISBN:("+current_book[0].ISBN+")",
-                      value:current_book[0].id
+                      label:current_book.data[0].titulo+" isbn:("+current_book.data[0].isbn+")",
+                      value:current_book.data[0].id
                     },
                   numero_tombo: exemplary_data.data[0].numero_tombo,
-                  disponivel:exemplary_data.data[0].disponivel 
+                  situacao:
+                  exemplary_data.data[0].situacao.toLowerCase() === "disponivel"
                   ? {
                     label:"Disponível",
                     value:true
                   }
-                  : {
+                  : 
+                  exemplary_data.data[0].situacao.toLowerCase() === "indisponivel"
+                  ?
+                  {
                     label:"Indisponível",
+                    value:false
+                  }
+                  :
+                  exemplary_data.data[0].situacao.toLowerCase() === "reservado"
+                  ?
+                  {
+                    label:"Reservado",
+                    value:false
+                  }
+                  : 
+                  {
+                    label:"Emprestado",
                     value:false
                   },
                   setor:exemplary_data.data[0].setor,
@@ -74,9 +89,10 @@ exemplary_router.get("/exemplary/get",async (req,res)=>{
 
     const exemplary_list = await client
         .from("tb_exemplar")
-        .select("disponivel")
+        .select("situacao")
         .eq("fk_id_biblioteca",id_biblioteca)
         .eq("fk_id_livro",id_livro)
+        .neq("deletado",true)
 
     !!exemplary_list.data
     ? (()=>{

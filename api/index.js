@@ -13,6 +13,8 @@ import exemplary_router from "../routes/exemplary.route.js";
 import notification_router from "../routes/notification.route.js";
 import reserve_router from "../routes/reserve.route.js";
 import category_router from "../routes/category.route.js";
+import amerce_router from "../routes/amerce.route.js";
+import suggestion_router from "../routes/suggestion.route.js";
 
 const server = express();
 
@@ -38,10 +40,11 @@ server.use(category_router)
 server.use(exemplary_router);
 server.use(loan_router);
 server.use(reserve_router);
+server.use(amerce_router);
 server.use(account_router);
 server.use(library_user_router);
 server.use(notification_router);
-
+server.use(suggestion_router)
 
 server.get("/books",(req,res)=>{
 
@@ -385,7 +388,7 @@ server.get("/tables/data",async (req,res)=>{
         switch(type){
 
             case "book":
-              onGetView("vw_table_livro",id,id_biblioteca)
+                await onGetView("vw_table_livro",id,id_biblioteca)
             break;
             case "exemplary":
                 (async()=>{
@@ -417,7 +420,7 @@ server.get("/tables/data",async (req,res)=>{
                         const reserve = await client.from("vw_table_reserva")
                         .select("*")
                         .eq("fk_id_biblioteca",id_biblioteca)
-                        .eq("tipo","fisico");
+                        .eq("tipo","FISICO");
 
                         !!reserve.data
                         ? res.status(200).send(reserve.data)
@@ -427,11 +430,11 @@ server.get("/tables/data",async (req,res)=>{
                 break;
                 case "online_reserve":
                     (async()=>{
-
+                        
                         const onlinReserve = await client.from("vw_table_reserva")
                         .select("*")
                         .eq("fk_id_biblioteca",id_biblioteca)
-                        .eq("tipo","online");
+                        .eq("tipo","ONLINE");
 
                         !!onlinReserve.data
                         ? res.status(200).send(onlinReserve.data)
@@ -535,7 +538,7 @@ server.post("/auth/library", async (req,res)=>{
 })
 
 
-server.listen(5900,(error)=>{
+server.listen(3300,(error)=>{
     if(error){
         console.log(error);
     }

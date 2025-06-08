@@ -1,0 +1,17 @@
+
+Rota notificação(Get)
+Coletar id_usuario,id_biblioteca e type da query(url)
+
+Se type == 'admin' pegar notificações do tipo 'admin'
+com fk_id_biblioteca e fk_id_usuario iguais ao da query(url)
+
+Se type == 'comum' pegar notificações do tipo 'comum' 
+com fk_id_usuario igual ao da query(url)
+
+Rota notificação(Put)
+Coletar id da query(url)
+Coletar marcado_lido do body({marcado_lido:boolean})
+
+Alterar notificação com campo id igual ao da query(url) 
+para o marcado_lido do body({marcado_lido:boolean})
+

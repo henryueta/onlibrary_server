@@ -3,6 +3,8 @@ import {onQueryDatabase} from "../functions/query.js";
 import client from '../database/supabase.js';
 const table_router = express.Router();
 
+
+
 table_router.get("/data/group",async(req,res)=>{
     try{
         let array = {};
@@ -29,30 +31,35 @@ table_router.get("/data/group",async(req,res)=>{
 
                const current_libraryUsersId = await client.from("tb_usuario_biblioteca")
               .select("fk_id_usuario")
-              .eq("fk_id_biblioteca",id);
-                
+              .eq("fk_id_biblioteca",id)
+              .neq("deletado",true)
 
                return !!current_libraryUsersId.data
                 ? client.from("tb_usuario")
                 .select("label:username,value:id")
+                .neq("deletado",true)
                 .not('id','in',`(${current_libraryUsersId.data.map((item)=>item.fk_id_usuario)})`)
                 : []
               })()
               
+              const accounts_id = await (async()=>{
 
+                const current_accountsId = await 
+                client.from("tb_perfil_usuario")
+                .select("label:nome,value:id")
+                .eq("fk_id_biblioteca",id)
+                .neq("deletado",true)
+
+                return !!current_accountsId.data
+                ? current_accountsId
+                : []
+
+              })()
 
               array = {
               ////cpf
               usuarios: await users_id.data,
-              perfis_biblioteca: await onQueryDatabase({
-                type:"getEq",
-                table:"tb_perfil_usuario",
-                getParams:"label:nome,value:id",
-                eq:{
-                  field:"fk_id_biblioteca",
-                  val:id
-                }
-              })
+              perfis_biblioteca:await accounts_id.data
             }
             res.status(200).send(array)
             })()
@@ -91,14 +98,16 @@ table_router.get("/data/group",async(req,res)=>{
             const current_books = await onQueryDatabase({
               type:"get",
               table:"tb_livro",
-              getParams:"ISBN,titulo,id"
+              getParams:"isbn,titulo,id"
             });
+
               !!current_books.length
               && (()=>{
+              
                 array = {
                   livros_biblioteca:current_books.map((item,index)=>{
                     return ({
-                      label:item.titulo+" ISBN:("+item.ISBN+")",
+                      label:item.titulo+" isbn:("+item.isbn+")",
                       value:item.id
                     })
                   })
@@ -120,41 +129,16 @@ table_router.get("/data/group",async(req,res)=>{
              //   }
              // })
 
-              
-
              const current_userId = await client
              .from('tb_usuario_biblioteca')
              .select('fk_id_usuario,id')
              .eq("fk_id_biblioteca",id)
-             .eq("tipo_usuario","comum")
-             .neq("situacao","bloqueado");
+             .eq("tipo_usuario","COMUM")
+             .neq("situacao","BLOQUEADO")
+             .neq("deletado",true);
 
-             console.log(current_userId.data)
-
-             const current_userLibraryId =  
-             !!current_userId.data.length
-             ? await onQueryDatabase({
-               type:"getIn",
-               table:"tb_usuario_biblioteca",
-               getParams:"value:id",
-               eq:{
-                 field:"fk_id_usuario",
-                 array:current_userId.data.map((item)=>item.fk_id_usuario)
-               }
-             })
-             : [];
-
-            //  const current_user = !!current_userLibraryId
-            //  ? await onQueryDatabase({
-            //    type:"getIn",
-            //    table:"tb_usuario",
-            //    getParams:"label:username",
-            //    eq:{
-            //      field:"id",
-            //      array:current_userId.map((item)=>item.fk_id_usuario)
-            //    }
-            //  })
-            //  : []
+             !!current_userId.data
+             && console.log(current_userId.data)
 
              const formated_users = await onQueryDatabase({
                type:"getIn",
@@ -176,7 +160,8 @@ table_router.get("/data/group",async(req,res)=>{
             const current_exemplaryId = await client.from("tb_exemplar")
               .select("label:numero_tombo,value:id")
               .eq("fk_id_biblioteca",id)
-              .eq("disponivel",true)
+              .eq("situacao","DISPONIVEL")
+              .neq("deletado",true)
 
             return !!current_exemplaryId.data
             ? current_exemplaryId.data
@@ -203,9 +188,85 @@ table_router.get("/data/group",async(req,res)=>{
               console.log(users_id)
                 res.status(200).send(array)
             })()
+              break;
+            case "reserve":
+              
+              const library_book_data = await client
+              .from("vw_livro")
+              .select("label:titulo,value:id")
+              .eq("fk_id_biblioteca",id)
+
+              const user_data = await client
+              .from("vw_usuario_biblioteca")
+              .select("label:username,value:fk_id_usuario")
+              .neq("deletado",true)
+              
+
+              library_book_data.data 
+              &&
+              user_data.data
+              ?
+              (()=>{
+
+                array = {
+                  usuarios_biblioteca:user_data.data,
+                  livros_biblioteca:library_book_data.data
+                }
+
+                res.status(200).send(array)
+
+              })()
+              : res.status(500).send({message:"error"})
 
               break;
+            case "amerce":
+              const users_amerce_id = (async()=>{
 
+             // const current_userId = await onQueryDatabase({
+             //   type:"getEq",
+             //   table:"tb_usuario_biblioteca",
+             //   getParams:"fk_id_usuario,id",
+             //   eq:{
+             //     field:"fk_id_biblioteca",
+             //     val:id
+             //   }
+             // })
+
+             const current_userId = await client
+             .from('tb_usuario_biblioteca')
+             .select('fk_id_usuario,id')
+             .eq("fk_id_biblioteca",id)
+             .eq("tipo_usuario","COMUM")
+             .neq("deletado",true);
+
+             !!current_userId.data
+             && console.log(current_userId.data)
+
+             const formated_users = await onQueryDatabase({
+               type:"getIn",
+               table:"vw_usuario_biblioteca",
+               getParams:"value:fk_id_usuario,label:username",
+               eq:{
+                 field:"usuario_biblioteca_id",
+                 array:current_userId.data.map((item)=>item.id)
+               }
+             })
+
+             return !!formated_users
+             ? formated_users
+             : []
+
+           })()
+
+           array = {
+            usuarios_biblioteca:await users_amerce_id
+           }
+           users_amerce_id&&
+            (()=>{
+              console.log(users_amerce_id)
+                res.status(200).send(array)
+            })()
+            break;
             default:
                 break;
         }
@@ -231,8 +292,8 @@ table_router.get("/count",async (req,res)=>{
             const bookCount = await client
             .from('tb_biblioteca_livro')
             .select('id', { count: 'exact'})
-            .eq("fk_id_biblioteca",id);
-
+            .eq("fk_id_biblioteca",id)
+            .neq("deletado",true);
           !!bookCount
           &&
           (()=>{
@@ -242,11 +303,26 @@ table_router.get("/count",async (req,res)=>{
 
 
               break;
+          case "account":
+            const account_count = await client
+            .from("tb_perfil_usuario")
+            .select("id",{count:"exact"})
+            .eq("fk_id_biblioteca",id)
+            .neq("deletado",true)
+
+            !!account_count
+            &&
+            (()=>{
+              count=account_count.count,
+              warn=false
+            })()
+          break;
           case "library_user":
           const userCount = await client
             .from('tb_usuario_biblioteca')
             .select('id', { count: 'exact'})
-            .eq("fk_id_biblioteca",id);
+            .eq("fk_id_biblioteca",id)
+            .neq("deletado",true);
 
           !!userCount
           &&
@@ -260,14 +336,14 @@ table_router.get("/count",async (req,res)=>{
           const loanCount = await client
             .from('tb_emprestimo')
             .select('situacao', { count: 'exact'})
-            .eq("fk_id_biblioteca",id);
-
+            .eq("fk_id_biblioteca",id)
+            .neq("deletado",true);
           !!loanCount
           &&
           (()=>{
 
                   count=loanCount.count,
-                  warn=!!loanCount.data.filter((item)=>item.situacao === "vencido").length ? true : false
+                  warn=!!loanCount.data.filter((item)=>item.situacao === "VENCIDO").length ? true : false
                 
             })()
             break;
@@ -276,12 +352,13 @@ table_router.get("/count",async (req,res)=>{
             .from('tb_multa')
             .select('situacao', { count: 'exact'})
             .eq("fk_id_biblioteca",id)
+            .neq("deletado",true);
             !!amerceCount
             &&
             (()=>{
 
                     count=amerceCount.count,
-                    warn=!!amerceCount.data.filter((item)=>item.situacao === "vencido").length ? true : false
+                    warn=!!amerceCount.data.filter((item)=>item.situacao === "VENCIDO").length ? true : false
 
             })() 
             break;
@@ -290,6 +367,7 @@ table_router.get("/count",async (req,res)=>{
               .from('tb_exemplar')
               .select('id', { count: 'exact'})
               .eq("fk_id_biblioteca",id)
+              .neq("deletado",true);
               !!exemplaryCount
               &&
               (()=>{
@@ -304,11 +382,31 @@ table_router.get("/count",async (req,res)=>{
               .from("tb_reserva")
               .select('situacao', { count: 'exact'})
               .eq("fk_id_biblioteca",id)
+              .neq("deletado",true);
               !!reserveCount
               &&
               (()=>{
                 count = reserveCount.count
-                warn=false
+                warn=(()=>{
+
+                  const total =
+                  reserveCount
+                  .data
+                  .filter((item)=>
+                    item.situacao.toLowerCase() === "atendido_parcialmente"
+                  ).length
+                  +
+                  reserveCount
+                  .data
+                  .filter((item)=>
+                    item.situacao.toLowerCase() === "atendido_totalmente"
+                  ).length
+                  console.log("TOTAL",total)
+                  return total
+
+                })()
+                ? true
+                : false
               })()
           break;
           case "online_reserve":
@@ -317,6 +415,7 @@ table_router.get("/count",async (req,res)=>{
               .select('situacao', { count: 'exact'})
               .eq("fk_id_biblioteca",id)
               .eq("tipo","online")
+              .neq("deletado",true);
               !!onlineReserveCount
               &&
               (()=>{
