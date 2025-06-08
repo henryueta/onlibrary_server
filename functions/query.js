@@ -112,11 +112,19 @@ const {login,senha} = data
    })()
 
   }
+//search value,filter,id_biblioteca
+//table name,field_list
 
 
+const onSearch = (search)=>{
+
+  
+
+}
 
 export {
   onQueryDatabase,
   onCheckValue,
-  onGetToken
+  onGetToken,
+  onSearch
 }

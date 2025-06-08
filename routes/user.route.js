@@ -1,8 +1,26 @@
 import express from "express";
 import {onGetToken, onQueryDatabase} from "../functions/query.js"
+import jwt from "jsonwebtoken"
 
 const user_router = express.Router();
 
+
+user_router.get("/user/get/bearer",(req,res)=>{
+
+    try {
+        const authHeader = req.headers['authorization']
+        const token = authHeader && 
+        authHeader.split(' ')[1]
+       
+        console.log(token)
+        res.status(200).send({token:token})
+
+    } catch (error) {
+        res.status(500).send({message:error})
+        console.log(error)
+    }
+
+})
 
 user_router.get("/user/get/loan",async (req,res)=>{
 
@@ -18,7 +36,7 @@ user_router.get("/user/get/loan",async (req,res)=>{
 
 })
 
-user_router.get("/user/get",async (req,res)=>{
+user_router.get("/user/get/dependencies",async (req,res)=>{
 
     try{
         const {id} = req.query

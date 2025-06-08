@@ -7,8 +7,21 @@ const library_user_router = express.Router();
 library_user_router.get("/library_user/get/search", async (req,res)=>{
 
   try {
-    const {value,filter} = req.query
+    const {value,filter,id_biblioteca} = req.query
+    console.log("vazio",value.trim())
+    !value.trim()
+    ? (async()=>{
+      const library_user_data = await client
+      .from("vw_table_usuario_biblioteca")
+      .select("*")
+      .eq("fk_id_biblioteca",id_biblioteca)
 
+      !!library_user_data.data
+      ? res.status(200).send(library_user_data.data)
+      : res.status(500).send(library_user_data.error)
+
+    })()
+    :
     filter.toLowerCase() !== "todos"
     ?
     (async()=>{
@@ -16,6 +29,7 @@ library_user_router.get("/library_user/get/search", async (req,res)=>{
       const library_user_data = await client
     .from("vw_table_usuario_biblioteca")
     .select("*")
+    .eq("fk_id_biblioteca",id_biblioteca)
     .ilike(filter,value+"%")
 
     library_user_data.data
@@ -28,16 +42,32 @@ library_user_router.get("/library_user/get/search", async (req,res)=>{
     : res.status(200).send([])
     })()
     : (async()=>{
-
+      const list = ['username','nome','email','cpf','perfil','situacao']
       const library_user_data = await client
       .from("vw_table_usuario_biblioteca")
       .select("*")
-      .ilike("username",value+"%")
-      
+      .eq("fk_id_biblioteca",id_biblioteca)
+      .or(
+        (()=>{
+          let orText ="";
+          list.forEach((item,index)=>{
+            orText += (
+              index > 0
+              ? ","
+              : ""
+            )+item+".ilike.%"+value
+        })
+        console.log(orText)
+        return orText;
+        })()
+      )
+        // "username.ilike.%"+value+",nome.ilike.%"+value+",email.ilike.%"+value+",cpf.ilike.%"+value+",perfil.ilike.%"+value+",situacao.ilike.%"+value
+
+      !!library_user_data.data
+      ? res.status(200).send(library_user_data.data)
+      : res.status(500).send({message:library_user_data.error})
+
     })()
-
-
-    
 
 
   } catch (error) {

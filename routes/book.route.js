@@ -8,23 +8,33 @@ book_router.get("/book/get/search",async (req,res)=>{
 
   try {
     const {filter,value} = req.query
-    const book_data = await onQueryDatabase({
-      type:"getEq",
-      table:"tb_livro",
-      getParams:"titulo,capa",
-      eq:{
-        field:filter,
-        val:value
-      }
-    })
 
-    !!book_data
-    ? res.status(200).send(book_data)
-    : res.status(500).send(book_data)
+
+    const book_data = await client
+    .from("vw_livro")
+    .select("titulo,capa")
+    .ilike((()=>{
+
+      return filter === "autor"
+      ? "autores"
+      : filter === "categoria"
+      ? "categorias"
+      : filter === "genero"
+      ? "generos"
+      : filter === "editora"
+      ? "editoras"
+      : filter
+
+    })(),value+"%")
+      
+
+    !!book_data.data
+    ? res.status(200).send(book_data.data)
+    : res.status(500).send(book_data.error)
 
   } catch (error) {
-    res.status(500).send({message:error})
     console.log(error)
+    res.status(500).send({message:error})
   }
 
 })
@@ -62,7 +72,6 @@ book_router.get("/book/list",async (req,res)=>{
       .from("tb_livro")
       .select("id,titulo,capa")
       .neq("deletado",true)
-
       !!books_data.data
       ? res.status(200).send(books_data.data)
       : res.status(200).send({message:books_data.error})

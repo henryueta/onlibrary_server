@@ -3,6 +3,7 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import client from "../database/supabase.js";
 import {onQueryDatabase,onCheckValue,onGetToken} from "../functions/query.js"
+import library_router from "../routes/library.route.js";
 import user_route from "../routes/user.route.js";
 import table_router from "../routes/table.route.js";
 import loan_router from "../routes/loan.route.js";
@@ -33,6 +34,7 @@ server.use(cors({
 
 server.use(cookieParser())
 
+server.use(library_router)
 server.use(user_route);
 server.use(table_router);
 server.use(book_router);
