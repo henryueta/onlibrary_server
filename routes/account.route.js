@@ -1,9 +1,33 @@
 import express from "express";
-import {onQueryDatabase} from "../functions/query.js"
+import {onQueryDatabase,onQuerySearch} from "../functions/query.js"
 import client from "../database/supabase.js";
 
 const account_router = express.Router();
 
+
+account_router.get("/account/get/search", async (req,res)=>{
+
+  try {
+    const {value,filter,id_biblioteca} = req.query
+    
+    const account_data = await onQuerySearch({
+      value:value,
+      filter:filter,
+      id_biblioteca:id_biblioteca
+    },
+    {
+      name:"vw_table_perfil_usuario",
+      field_list:['username','nome','email','cpf','perfil','situacao']
+    })    
+
+    res.status(200).send(account_data)
+
+  } catch (error) {
+    console.log(error)
+    res.status(500).send({message:error})
+  }
+
+})
 
 account_router.get("/account/get/dependencies",async (req,res)=>{
 

@@ -30,7 +30,7 @@ table_router.get("/data/group",async(req,res)=>{
               const users_id = await (async()=>{
 
                const current_libraryUsersId = await client.from("tb_usuario_biblioteca")
-              .select("fk_id_usuario")
+              .select("fk_id_usuario,situacao")
               .eq("fk_id_biblioteca",id)
               .neq("deletado",true)
 
@@ -57,7 +57,6 @@ table_router.get("/data/group",async(req,res)=>{
               })()
 
               array = {
-              ////cpf
               usuarios: await users_id.data,
               perfis_biblioteca:await accounts_id.data
             }
@@ -160,7 +159,7 @@ table_router.get("/data/group",async(req,res)=>{
             const current_exemplaryId = await client.from("tb_exemplar")
               .select("label:numero_tombo,value:id")
               .eq("fk_id_biblioteca",id)
-              .eq("situacao","DISPONIVEL")
+              .or("situacao.eq.DISPONIVEL,situacao.eq.RESERVADO")
               .neq("deletado",true)
 
             return !!current_exemplaryId.data
@@ -197,9 +196,8 @@ table_router.get("/data/group",async(req,res)=>{
               .eq("fk_id_biblioteca",id)
 
               const user_data = await client
-              .from("vw_usuario_biblioteca")
-              .select("label:username,value:fk_id_usuario")
-              .neq("deletado",true)
+              .from("tb_usuario")
+              .select("label:username,value:id")
               
 
               library_book_data.data 
@@ -216,7 +214,9 @@ table_router.get("/data/group",async(req,res)=>{
                 res.status(200).send(array)
 
               })()
-              : res.status(500).send({message:"error"})
+              : (()=>{
+                return res.status(500).send({message:"error"})
+              })()
 
               break;
             case "amerce":

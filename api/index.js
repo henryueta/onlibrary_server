@@ -417,6 +417,7 @@ server.get("/tables/data",async (req,res)=>{
                  (async()=>{
                     await onGetView("vw_table_multa",id,id_biblioteca)
                 })()
+                break;
                 case "reserve":
                     (async()=>{
                         const reserve = await client.from("vw_table_reserva")

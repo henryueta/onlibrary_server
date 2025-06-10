@@ -116,15 +116,75 @@ const {login,senha} = data
 //table name,field_list
 
 
-const onSearch = (search)=>{
+const onQuerySearch = (search,table)=>{
 
-  
+ return !search.value.trim()
+    ? (async()=>{
+      const table_search_data = await client
+      .from(table.name)
+      .select("*")
+      .eq("fk_id_biblioteca",search.id_biblioteca)
+
+      return !!table_search_data.data
+      ? table_search_data.data
+      : table_search_data.error
+
+    })()
+    :
+    search.filter.toLowerCase() !== "todos"
+    ?
+    (async()=>{
+      
+      const table_search_data = await client
+    .from(table.name)
+    .select("*")
+    .eq("fk_id_biblioteca",search.id_biblioteca)
+    .ilike(search.filter,search.value+"%")
+
+    return table_search_data.data
+    ? (()=>{
+      console.log(table_search_data.data)
+      return table_search_data.data
+    })()
+    : table_search_data.error
+    ? table_search_data.error
+    : []
+    })()
+    : (async()=>{
+      const list = table.field_list
+      const table_search_data = await client
+      .from(table.name)
+      .select("*")
+      .eq("fk_id_biblioteca",search.id_biblioteca)
+      .or(
+        (()=>{
+          let orText ="";
+          list.forEach((item,index)=>{
+            orText += (
+              index > 0
+              ? ","
+              : ""
+            )+item+".ilike.%"+search.value
+        })
+        console.log(orText)
+        return orText;
+        })()
+      )
+        // "username.ilike.%"+value+",nome.ilike.%"+value+",email.ilike.%"+value+",cpf.ilike.%"+value+",perfil.ilike.%"+value+",situacao.ilike.%"+value
+
+      return !!table_search_data.data
+      ? table_search_data.data
+      : table_search_data.error
+
+    })()
 
 }
+
+
 
 export {
   onQueryDatabase,
   onCheckValue,
   onGetToken,
-  onSearch
+  onQuerySearch
 }

@@ -1,6 +1,7 @@
 import express from "express";
-import {onQueryDatabase} from "../functions/query.js"
+import {onQueryDatabase, onQuerySearch} from "../functions/query.js"
 import client from "../database/supabase.js";
+
 
 const loan_router = express.Router();
 
@@ -14,6 +15,29 @@ const setLoanDate = (days)=>{
   return newDate.toISOString().split('T')[0];
 }
 
+
+loan_router.get("/loan/get/search",async(req,res)=>{
+
+  try {
+    const {value,filter,id_biblioteca} = req.query
+    const loan_data = await onQuerySearch({
+      value:value,
+      filter:filter,
+      id_biblioteca:id_biblioteca
+    },
+    {
+      name:"vw_table_emprestimo",
+      field_list:['Username','Livros','Exemplares','Bibliotecario','Data de Emissão','Data de Devolução','Situação']
+    })
+
+    res.status(200).send(loan_data)
+
+  } catch (error) {
+    console.log(error)
+    res.status(500).send({message:error})
+  }
+
+})
 
 loan_router.get("/loan/get/user",async (req,res)=>{
 
@@ -55,7 +79,7 @@ loan_router.get("/loan/get/dependencies",async (req,res)=>{
 
     const loan_data = await client
     .from("tb_emprestimo")
-    .select("situacao,data_devolucao,fk_id_usuario_biblioteca,id")
+    .select("situacao,data_devolucao,fk_id_usuario_biblioteca")
     .eq("fk_id_biblioteca",id_biblioteca)
     .eq("id",id)
     .neq("deletado",true)
@@ -81,26 +105,25 @@ loan_router.get("/loan/get/dependencies",async (req,res)=>{
         getParams:"fk_id_exemplar",
         eq:{
           field:"fk_id_emprestimo",
-          val:loan_data.data[0].id
+          val:id
         }
       })
 
       !!loan_exemplaries
       &&
       (async()=>{
-        console.log(loan_exemplaries)
+        console.log("emprestimos",loan_exemplaries)
     const exemplaries_data = await client.from("tb_exemplar")
       .select("label:numero_tombo,value:id")
       .in('id',loan_exemplaries.map((item)=>{
         return item.fk_id_exemplar
       }))
-      .eq("situacao","DISPONIVEL")
       .neq("deletado",true)
       
-        !!users_data && !!exemplaries_data
+        !!users_data && !!exemplaries_data.data
         &&
        (()=>{
-         
+        console.log(exemplaries_data.data)
     array = {
       usuarios_biblioteca:{
         label:users_data[0].label,

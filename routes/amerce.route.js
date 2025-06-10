@@ -1,8 +1,33 @@
 import express from "express";
-import {onQueryDatabase} from "../functions/query.js"
+import {onQueryDatabase,onQuerySearch} from "../functions/query.js"
 import client from "../database/supabase.js";
 
 const amerce_router = express.Router();
+
+
+amerce_router.get("/amerce/get/search", async (req,res)=>{
+
+    try {
+      const {value,filter,id_biblioteca} = req.query
+      
+      const amerce_data = await onQuerySearch({
+        value:value,
+        filter:filter,
+        id_biblioteca:id_biblioteca
+      },
+      {
+        name:"vw_table_multa",
+        field_list:['Username','Nome','Bibliotecario','Valor','Data de emissão','Situação']
+      })    
+  
+      res.status(200).send(amerce_data)
+  
+    } catch (error) {
+      console.log(error)
+      res.status(500).send({message:error})
+    }
+  
+  })
 
 
 amerce_router.get("/amerce/get/dependencies",async(req,res)=>{

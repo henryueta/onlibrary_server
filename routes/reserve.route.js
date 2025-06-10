@@ -1,8 +1,32 @@
 import express from "express";
-import {onQueryDatabase} from "../functions/query.js"
+import {onQueryDatabase,onQuerySearch} from "../functions/query.js"
 import client from "../database/supabase.js";
 
 const reserve_router = express.Router();
+
+reserve_router.get("/reserve/get/search", async (req,res)=>{
+
+  try {
+    const {value,filter,id_biblioteca} = req.query
+    
+    const reserbe_data = await onQuerySearch({
+      value:value,
+      filter:filter,
+      id_biblioteca:id_biblioteca
+    },
+    {
+      name:"vw_table_reserva",
+      field_list:['Username','Livro','Data de Emissão','Data de Retirada','Situação','tipo','Quantidade Total','Quantidade Pendente']
+    })    
+
+    res.status(200).send(reserbe_data)
+
+  } catch (error) {
+    console.log(error)
+    res.status(500).send({message:error})
+  }
+
+})
 
 reserve_router.get("/reserve/get/dependencies",async (req,res)=>{
 

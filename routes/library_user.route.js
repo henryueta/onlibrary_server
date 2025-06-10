@@ -1,5 +1,5 @@
 import express from "express";
-import {onQueryDatabase} from "../functions/query.js"
+import {onQueryDatabase, onQuerySearch} from "../functions/query.js"
 import client from "../database/supabase.js";
 
 const library_user_router = express.Router();
@@ -8,67 +8,18 @@ library_user_router.get("/library_user/get/search", async (req,res)=>{
 
   try {
     const {value,filter,id_biblioteca} = req.query
-    console.log("vazio",value.trim())
-    !value.trim()
-    ? (async()=>{
-      const library_user_data = await client
-      .from("vw_table_usuario_biblioteca")
-      .select("*")
-      .eq("fk_id_biblioteca",id_biblioteca)
+    
+    const library_user_data = await onQuerySearch({
+      value:value,
+      filter:filter,
+      id_biblioteca:id_biblioteca
+    },
+    {
+      name:"vw_table_usuario_biblioteca",
+      field_list:['username','nome','email','cpf','perfil','situacao']
+    })
 
-      !!library_user_data.data
-      ? res.status(200).send(library_user_data.data)
-      : res.status(500).send(library_user_data.error)
-
-    })()
-    :
-    filter.toLowerCase() !== "todos"
-    ?
-    (async()=>{
-      
-      const library_user_data = await client
-    .from("vw_table_usuario_biblioteca")
-    .select("*")
-    .eq("fk_id_biblioteca",id_biblioteca)
-    .ilike(filter,value+"%")
-
-    library_user_data.data
-    ? (()=>{
-      console.log(library_user_data.data)
-      res.status(200).send(library_user_data.data)
-    })()
-    : library_user_data.error
-    ? res.status(500).send(library_user_data.error)
-    : res.status(200).send([])
-    })()
-    : (async()=>{
-      const list = ['username','nome','email','cpf','perfil','situacao']
-      const library_user_data = await client
-      .from("vw_table_usuario_biblioteca")
-      .select("*")
-      .eq("fk_id_biblioteca",id_biblioteca)
-      .or(
-        (()=>{
-          let orText ="";
-          list.forEach((item,index)=>{
-            orText += (
-              index > 0
-              ? ","
-              : ""
-            )+item+".ilike.%"+value
-        })
-        console.log(orText)
-        return orText;
-        })()
-      )
-        // "username.ilike.%"+value+",nome.ilike.%"+value+",email.ilike.%"+value+",cpf.ilike.%"+value+",perfil.ilike.%"+value+",situacao.ilike.%"+value
-
-      !!library_user_data.data
-      ? res.status(200).send(library_user_data.data)
-      : res.status(500).send({message:library_user_data.error})
-
-    })()
-
+    res.status(200).send(library_user_data)
 
   } catch (error) {
     console.log(error)
@@ -83,7 +34,7 @@ library_user_router.get("/library_user/get/dependencies",async(req,res)=>{
       let array = {};
       const {id,id_biblioteca} = req.query
       const library_user_data = await client.from("tb_usuario_biblioteca")
-      .select("numero_matricula,cpf,tipo_usuario,fk_id_perfil_usuario,fk_id_usuario")
+      .select("numero_matricula,cpf,tipo_usuario,fk_id_perfil_usuario,fk_id_usuario,situacao")
       .eq("id",id)
       .eq("fk_id_biblioteca",id_biblioteca)
       .neq("deletado",true)
@@ -116,6 +67,10 @@ library_user_router.get("/library_user/get/dependencies",async(req,res)=>{
                       usuarios:{
                         label:user_id.data[0].label,
                         value:user_id.data[0].value
+                      },
+                      situacao:{
+                        label:library_user_data.data[0].situacao,
+                        value:library_user_data.data[0].situacao
                       },
                       numero_matricula:library_user_data.data[0].numero_matricula,
                       cpf:library_user_data.data[0].cpf,

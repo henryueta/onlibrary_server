@@ -1,10 +1,36 @@
 import express from "express";
-import {onQueryDatabase} from "../functions/query.js"
+import {onQueryDatabase,onQuerySearch} from "../functions/query.js"
 import client from "../database/supabase.js";
 
 const book_router = express.Router();
 
-book_router.get("/book/get/search",async (req,res)=>{
+book_router.get("/book/get/search", async (req,res)=>{
+
+  try {
+    const {value,filter,id_biblioteca} = req.query
+    
+    const book_data = await onQuerySearch({
+      value:value,
+      filter:filter,
+      id_biblioteca:id_biblioteca
+    },
+    {
+      name:"vw_table_livro",
+      field_list:['Título','ISBN','Exemplares','Autores','Categorias','Generos','Editora']
+    })    
+
+    res.status(200).send(book_data)
+
+  } catch (error) {
+    console.log(error)
+    res.status(500).send({message:error})
+  }
+
+})
+
+
+
+book_router.get("/book/get/search/view",async (req,res)=>{
 
   try {
     const {filter,value} = req.query
@@ -12,7 +38,7 @@ book_router.get("/book/get/search",async (req,res)=>{
 
     const book_data = await client
     .from("vw_livro")
-    .select("titulo,capa")
+    .select("titulo,capa,id")
     .ilike((()=>{
 
       return filter === "autor"
