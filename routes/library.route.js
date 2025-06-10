@@ -14,7 +14,11 @@ library_router.get("/library/get/dependencies",(async(req,res)=>{
         .eq('id',id)
         .neq("deletado",true);
 
-        
+        console.log("ID",id)
+
+        !!library_data.data
+        &&
+        console.log(library_data.data)
 
         !!library_data.data
         ? res.status(200).send({

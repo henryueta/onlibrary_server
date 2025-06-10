@@ -3,7 +3,20 @@ import {onQueryDatabase} from "../functions/query.js";
 import client from '../database/supabase.js';
 const table_router = express.Router();
 
+table_router.get("/data/week",async(req,res)=>{
 
+  try {
+    
+    const table_data = ""
+
+    
+
+  } catch (error) {
+    res.status(500).send({message:error})
+    console.log(error)
+  }
+
+})
 
 table_router.get("/data/group",async(req,res)=>{
     try{

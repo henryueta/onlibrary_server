@@ -38,7 +38,7 @@ book_router.get("/book/get/search/view",async (req,res)=>{
 
     const book_data = await client
     .from("vw_livro")
-    .select("titulo,capa,id")
+    .select("titulo,imagem:capa,id")
     .ilike((()=>{
 
       return filter === "autor"
@@ -96,7 +96,7 @@ book_router.get("/book/list",async (req,res)=>{
 
       const books_data = await client
       .from("tb_livro")
-      .select("id,titulo,capa")
+      .select("id,titulo,imagem:capa")
       .neq("deletado",true)
       !!books_data.data
       ? res.status(200).send(books_data.data)
@@ -116,7 +116,7 @@ book_router.get("/book/get",async (req,res)=>{
       const book = await onQueryDatabase({
         type:"getEq",
         table:"vw_livro",
-        getParams:"*",
+        getParams:"imagem:capa,titulo,descricao,autores,categorias,generos,editoras,ISBN,ano_lancamento,fk_id_biblioteca_livro,fk_id_biblioteca,id",
         eq:{
           field:"id",
           val:id

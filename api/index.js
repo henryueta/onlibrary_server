@@ -390,32 +390,44 @@ server.get("/tables/data",async (req,res)=>{
         switch(type){
 
             case "book":
-                await onGetView("vw_table_livro",id,id_biblioteca)
+                await onGetView("vw_table_livro",id,id_biblioteca);
+            break;
+            case "author":
+                await onGetView("vw_table_autor",id,id_biblioteca);
+            break;
+            case "category":
+                await onGetView("vw_table_categoria",id,id_biblioteca);
+            break;
+            case "gender":
+                await onGetView("vw_table_genero",id,id_biblioteca);
+            break;
+            case "publisher":
+                await onGetView("vw_table_editora",id,id_biblioteca);
             break;
             case "exemplary":
                 (async()=>{
-                    await onGetView("vw_table_exemplar",id,id_biblioteca)
+                    await onGetView("vw_table_exemplar",id,id_biblioteca);
                 })()
             break;
             case "library_user":
                 (async()=>{
-                    await onGetView("vw_table_usuario_biblioteca",id,id_biblioteca)
+                    await onGetView("vw_table_usuario_biblioteca",id,id_biblioteca);
                 })()
                break;
                case "account":
                 (async()=>{
-                    await onGetView("vw_table_perfil_usuario",id,id_biblioteca)
+                    await onGetView("vw_table_perfil_usuario",id,id_biblioteca);
                 })()
                break;
                case "loan":
                 (async()=>{
                     /////////////////////////////apenas os disponíveis 
-                    await onGetView("vw_table_emprestimo",id,id_biblioteca)
+                    await onGetView("vw_table_emprestimo",id,id_biblioteca);
                 })()
                break;
                case "amerce":
                  (async()=>{
-                    await onGetView("vw_table_multa",id,id_biblioteca)
+                    await onGetView("vw_table_multa",id,id_biblioteca);
                 })()
                 break;
                 case "reserve":
